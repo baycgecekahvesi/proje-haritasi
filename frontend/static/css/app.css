@@ -817,6 +817,86 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #c7d2fe; border-c
   .calc-layout { grid-template-columns: 1fr; }
 }
 
+/* ===================== KISALTMALAR ===================== */
+.gl-layout { display: flex; flex-direction: column; gap: 16px; }
+
+.gl-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface);
+  padding: 16px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.gl-search-wrap { width: 100%; }
+.gl-search {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: 14px 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color .15s;
+}
+.gl-search:focus { outline: none; border-color: var(--primary); }
+
+.gl-cats { display: flex; flex-wrap: wrap; gap: 6px; }
+.gl-cat-btn {
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font: 600 12px 'Inter', sans-serif;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--muted);
+  transition: all .15s;
+}
+.gl-cat-btn:hover { border-color: var(--primary); color: var(--primary); }
+.gl-cat-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+.gl-list { display: flex; flex-direction: column; gap: 20px; }
+.gl-empty { padding: 40px; text-align: center; color: var(--muted); }
+
+.gl-group { }
+.gl-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 0 8px 12px;
+  border-left: 3px solid var(--primary);
+  margin-bottom: 10px;
+}
+.gl-count { font-weight: 400; color: var(--muted); font-size: 12px; }
+
+.gl-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+.gl-card {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-left: 3px solid var(--border);
+  transition: box-shadow .15s;
+}
+.gl-card:hover { box-shadow: 0 4px 16px rgba(79,110,247,.12); border-left-color: var(--primary); }
+
+.gl-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gl-abbr { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: .5px; }
+.gl-cat-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+.gl-full { font-size: 12.5px; font-weight: 600; color: var(--text); }
+.gl-tr { font-size: 12px; color: var(--primary); font-weight: 500; }
+.gl-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 2px; }
+
 /* ===================== RAPORLAR YENİ ===================== */
 .rp-layout { display: flex; flex-direction: column; gap: 0; height: 100%; }
 

@@ -7,7 +7,7 @@
   <title>Otomasyon Proje Takip</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=7" />
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=8" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 </head>
@@ -49,6 +49,7 @@
         <button class="tab" data-tab="tasks">⚙️ Görev Takip</button>
         <button class="tab" data-tab="calculations">📐 Hesaplamalar</button>
         <button class="tab" data-tab="costanalysis">💰 Maliyet Analizi</button>
+        <button class="tab" data-tab="glossary">📖 Kısaltmalar</button>
         <button class="tab" data-tab="users" id="tab-users" hidden>👤 Kullanıcılar</button>
       </nav>
       <div class="topbar-right">
@@ -225,6 +226,9 @@
       <!-- ---------- MALİYET ANALİZİ SEKMESİ ---------- -->
       <section id="panel-costanalysis" class="panel"></section>
 
+      <!-- ---------- KISALTMALAR SEKMESİ ---------- -->
+      <section id="panel-glossary" class="panel"></section>
+
       <!-- ---------- KULLANICILAR SEKMESİ ---------- -->
       <section id="panel-users" class="panel">
         <div class="panel-head">
@@ -263,6 +267,7 @@
   <script src="{% static 'js/tasks.js' %}?v=6"></script>
   <script src="{% static 'js/calculations.js' %}?v=3"></script>
   <script src="{% static 'js/cost-analysis.js' %}?v=1"></script>
+  <script src="{% static 'js/glossary.js' %}?v=1"></script>
   <script src="{% static 'js/app.js' %}?v=4"></script>
 </body>
 </html>
