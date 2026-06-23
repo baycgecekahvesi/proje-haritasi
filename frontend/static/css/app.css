@@ -1546,3 +1546,92 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #c7d2fe; border-c
 
 .btn-sm { padding: 6px 14px; font-size: 12px; }
 
+
+/* =============================== RISK KAYIT DEFTERİ — v13 =============================== */
+
+.rk-layout { padding: 0; }
+
+.rk-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.rk-title  { font-size: 20px; font-weight: 700; margin: 0; }
+.rk-sub    { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+.rk-header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.rk-ozet-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.rk-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  border: 1px solid transparent;
+}
+.rk-skor {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 32px; height: 24px; border-radius: 6px;
+  font-size: 13px; font-weight: 700; padding: 0 6px;
+}
+
+/* View bar */
+.rk-view-bar {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 10px; padding: 12px 24px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+}
+.rk-filtreler { display: flex; gap: 8px; flex-wrap: wrap; }
+.rk-fil { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: var(--surface); }
+
+.rk-vtabs { display: flex; gap: 4px; }
+.rk-vtab {
+  padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface); font-size: 13px; cursor: pointer; transition: all .15s;
+}
+.rk-vtab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* Tablo */
+.rk-tablo-wrap { padding: 16px 24px; overflow-x: auto; }
+.rk-tablo { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rk-tablo th {
+  text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 600;
+  color: var(--muted); border-bottom: 2px solid var(--border); white-space: nowrap;
+}
+.rk-tablo td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.rk-satir { cursor: pointer; transition: background .12s; }
+.rk-satir:hover { background: var(--bg); }
+.rk-baslik-cell { max-width: 280px; }
+.rk-baslik { display: block; font-weight: 500; }
+.rk-proje-lbl { display: block; font-size: 11px; color: var(--muted); }
+.rk-num { text-align: center; font-weight: 600; color: var(--text); }
+
+/* Isı haritası */
+.rk-hm-wrap { display: flex; gap: 24px; padding: 20px 24px; flex-wrap: wrap; }
+.rk-hm-left { flex: 0 0 auto; }
+.rk-hm-title { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+.rk-hm-sub   { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.rk-hm-right { flex: 1; min-width: 200px; }
+.rk-hm-legend { margin-bottom: 16px; }
+.rk-hm-leg-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.rk-hm-leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 4px; }
+.rk-hm-leg-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.rk-hm-listesi  { max-height: 360px; overflow-y: auto; }
+.rk-hm-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 8px; margin-bottom: 4px; border-radius: 6px;
+  background: var(--bg); cursor: pointer; border-left: 3px solid transparent;
+  transition: opacity .12s;
+}
+.rk-hm-item:hover { opacity: .8; }
+
+/* Detay modal */
+.rk-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; margin: 12px 0 16px; }
+.rk-detail-grid > div { display: flex; flex-direction: column; gap: 2px; }
+.rk-detail-blok {
+  background: var(--bg); padding: 12px 14px; border-radius: 8px;
+  border-left: 3px solid var(--primary); margin-bottom: 10px;
+}
+.rk-detail-blok strong { display: block; font-size: 11px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+
+/* Form slider */
+input[type=range] { width: 100%; accent-color: var(--primary); }

@@ -15,6 +15,7 @@ from apps.documents.eplan_api import router as eplan_router
 from apps.projects.api import router as projects_router
 from apps.reports.api import router as reports_router
 from apps.skills.api import router as skills_router
+from apps.risks.api import router as risks_router
 
 api = NinjaAPI(
     title="ProjeHaritasi API",
@@ -33,6 +34,7 @@ api.add_router("/eplan", eplan_router, tags=["E-Plan Dokumanlar"])
 api.add_router("/reports", reports_router, tags=["Raporlar"])
 api.add_router("/skills", skills_router, tags=["Skill Ekosistemi"])
 api.add_router("/agents", agents_router, tags=["Ajanlar"])
+api.add_router("/risks", risks_router, tags=["Risk Yonetimi"])
 
 
 @api.exception_handler(AuthenticationError)

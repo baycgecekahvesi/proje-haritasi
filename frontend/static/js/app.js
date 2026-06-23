@@ -280,6 +280,7 @@ const App = (() => {
     if (tab === "eplan")       Eplan.load();
     if (tab === "flow")        ProjectFlow.load();
     if (tab === "glossary")    Glossary.load();
+    if (tab === "risks")       Risks.load();
     if (tab === "users")    Users.render();
   }
 
