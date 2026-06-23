@@ -40,8 +40,12 @@ const Calculations = (() => {
 
     if (activeTab === "cable") {
       renderCableLayout(container);
-    } else {
+    } else if (activeTab === "motor") {
       renderMotorLayout(container);
+    } else if (activeTab === "pm-agent") {
+      renderPmAgent(container);
+    } else {
+      renderRiskAgent(container);
     }
   }
 
@@ -433,5 +437,151 @@ const Calculations = (() => {
     `;
   }
 
-  return { load };
+  // ===================== PM KOORDİNATÖR AJAN PANELİ =====================
+  async function renderPmAgent(container) {
+    container.innerHTML = `<div class="agent-loading">🤖 PM Koordinatör çalışıyor…</div>`;
+    let data;
+    try {
+      data = await API.get("/agents/pm");
+    } catch (e) {
+      container.innerHTML = `<div class="agent-error">Ajan çalıştırılamadı: ${e.message || e}</div>`;
+      return;
+    }
+
+    const st = data.istatistik || {};
+    const tipIcon = { baslat: "▶", engel: "🚫", uyari: "⚠️" };
+    const oncelikRenk = { kritik: "#e74c3c", yuksek: "#e67e22", orta: "#f39c12", dusuk: "#27ae60" };
+
+    const fazHtml = (data.faz_ozet || []).map(f => `
+      <div class="agent-faz-row">
+        <span class="agent-faz-adi">${UI.esc(f.faz)}</span>
+        <div class="agent-faz-bar-wrap">
+          <div class="agent-faz-bar" style="width:${f.pct}%"></div>
+        </div>
+        <span class="agent-faz-pct">%${f.pct} (${f.tamamlanan}/${f.toplam})</span>
+      </div>`).join("");
+
+    const maddelerHtml = (data.maddeler || []).map(m => `
+      <div class="agent-madde" style="border-left-color:${oncelikRenk[m.oncelik] || "#4f6ef7"}">
+        <span class="agent-madde-ikon">${tipIcon[m.tip] || "•"}</span>
+        <span>${UI.esc(m.mesaj)}</span>
+      </div>`).join("") || `<p class="muted">Aksiyon gerektiren madde yok.</p>`;
+
+    container.innerHTML = `
+      <div class="agent-panel">
+        <div class="agent-header">
+          <div class="agent-badge">🤖 ${UI.esc(data.ajan)}</div>
+          <h3>${UI.esc(data.baslik)}</h3>
+          <p class="muted">${UI.esc(data.aciklama)}</p>
+        </div>
+
+        <div class="agent-stat-row">
+          <div class="agent-stat"><div class="num">${st.toplam || 0}</div><div class="lbl">Toplam</div></div>
+          <div class="agent-stat accent-green"><div class="num">${st.tamamlanan || 0}</div><div class="lbl">Tamamlanan</div></div>
+          <div class="agent-stat accent-blue"><div class="num">${st.devam_eden || 0}</div><div class="lbl">Devam Eden</div></div>
+          <div class="agent-stat accent-red"><div class="num">${st.engellenen || 0}</div><div class="lbl">Engellenen</div></div>
+          <div class="agent-stat"><div class="num">${st.planlandi || 0}</div><div class="lbl">Planlandı</div></div>
+          <div class="agent-stat"><div class="num">%${st.genel_pct || 0}</div><div class="lbl">Genel İlerleme</div></div>
+        </div>
+
+        <div class="agent-section">
+          <h4>📋 Aksiyon Listesi</h4>
+          <div class="agent-maddeler">${maddelerHtml}</div>
+        </div>
+
+        <div class="agent-section">
+          <h4>🔄 Faz İlerlemesi</h4>
+          <div class="agent-faz-list">${fazHtml || '<p class="muted">Faz verisi yok.</p>'}</div>
+        </div>
+
+        <button class="btn btn-ghost btn-sm" onclick="Calculations.refreshPm()">↻ Yenile</button>
+      </div>
+    `;
+  }
+
+  // ===================== RİSK/QA AJAN PANELİ =====================
+  async function renderRiskAgent(container) {
+    container.innerHTML = `<div class="agent-loading">⚠️ Risk/QA Ajanı analiz ediyor…</div>`;
+    let data;
+    try {
+      data = await API.get("/agents/risk");
+    } catch (e) {
+      container.innerHTML = `<div class="agent-error">Ajan çalıştırılamadı: ${e.message || e}</div>`;
+      return;
+    }
+
+    const seviyeRenk = { kritik: "#e74c3c", yuksek: "#e67e22", orta: "#f39c12", bilgi: "#4f6ef7" };
+    const seviyeIkon = { kritik: "🔴", yuksek: "🟠", orta: "🟡", bilgi: "🔵" };
+
+    const risklerHtml = (data.riskler || []).map(r => `
+      <div class="agent-madde" style="border-left-color:${seviyeRenk[r.seviye] || "#aaa"}">
+        <span class="agent-madde-ikon">${seviyeIkon[r.seviye] || "•"}</span>
+        <span>${UI.esc(r.mesaj)}</span>
+        ${r.gorev_id ? `<span class="pill" style="margin-left:auto;font-size:11px">${UI.esc(r.gorev_id)}</span>` : ""}
+      </div>`).join("") || `<p class="muted">Risk maddesi tespit edilmedi. ✅</p>`;
+
+    const skorRenk = data.risk_skoru >= 20 ? "#e74c3c" : data.risk_skoru >= 10 ? "#e67e22" : data.risk_skoru >= 5 ? "#f39c12" : "#27ae60";
+
+    const hazirHtml = (label, hazir) => `
+      <div class="agent-hazir-row">
+        <span>${label}</span>
+        <span class="pill ${hazir ? "accent-green" : "accent-red"}">${hazir ? "✅ Hazır" : "⏳ Bekliyor"}</span>
+      </div>`;
+
+    container.innerHTML = `
+      <div class="agent-panel">
+        <div class="agent-header">
+          <div class="agent-badge">⚠️ ${UI.esc(data.ajan)}</div>
+          <h3>${UI.esc(data.baslik)}</h3>
+          <p class="muted">${UI.esc(data.aciklama)}</p>
+        </div>
+
+        <div class="agent-stat-row">
+          <div class="agent-stat" style="border-top:3px solid ${skorRenk}">
+            <div class="num" style="color:${skorRenk}">${data.risk_skoru}</div>
+            <div class="lbl">Risk Skoru</div>
+          </div>
+          <div class="agent-stat">
+            <div class="num" style="color:${skorRenk}">${UI.esc(data.risk_seviyesi)}</div>
+            <div class="lbl">Risk Seviyesi</div>
+          </div>
+          <div class="agent-stat">
+            <div class="num">${data.kritik_yol_sayisi || 0}</div>
+            <div class="lbl">Kritik Yol Görevi</div>
+          </div>
+          <div class="agent-stat">
+            <div class="num">${(data.riskler || []).length}</div>
+            <div class="lbl">Risk Maddesi</div>
+          </div>
+        </div>
+
+        <div class="agent-section">
+          <h4>🛤️ FAT / SAT Hazırlık Durumu</h4>
+          <div class="agent-hazir-list">
+            ${hazirHtml("FAT (Fabrika Kabul Testi)", data.fat_hazir)}
+            ${hazirHtml("SAT (Saha Kabul Testi)", data.sat_hazir)}
+          </div>
+        </div>
+
+        <div class="agent-section">
+          <h4>🔍 Risk Maddeleri</h4>
+          <div class="agent-maddeler">${risklerHtml}</div>
+        </div>
+
+        <button class="btn btn-ghost btn-sm" onclick="Calculations.refreshRisk()">↻ Yenile</button>
+      </div>
+    `;
+  }
+
+  function refreshPm() {
+    const container = document.getElementById("calculations-container");
+    if (container) renderPmAgent(container);
+  }
+
+  function refreshRisk() {
+    const container = document.getElementById("calculations-container");
+    if (container) renderRiskAgent(container);
+  }
+
+  return { load, refreshPm, refreshRisk };
 })();
