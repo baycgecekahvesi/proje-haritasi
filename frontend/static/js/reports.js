@@ -90,9 +90,9 @@ const Reports = (() => {
         datasets: [{ data: distData.map(d => d.count), backgroundColor: distData.map(d => STATUS_COLOR[d.status] || "#95a5a6"), borderWidth: 2 }],
       },
       options: {
-        responsive: true, maintainAspectRatio: true,
+        responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { position: "right", labels: { font: { size: 12 } } },
+          legend: { position: "right", labels: { font: { size: 11 }, boxWidth: 12 } },
           tooltip: { callbacks: { label: c => ` ${c.label}: ${c.raw} proje` } },
         },
       },
@@ -104,7 +104,11 @@ const Reports = (() => {
         labels: buckets.map(b => b.label),
         datasets: [{ label: "Proje Sayısı", data: buckets.map(b => b.count), backgroundColor: ["#e74c3c","#f39c12","#f1c40f","#2ecc71","#27ae60"], borderRadius: 6 }],
       },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+      },
     });
 
     const topProv = provinceData.slice(0, 15);
@@ -118,11 +122,11 @@ const Reports = (() => {
         ],
       },
       options: {
-        responsive: true,
-        plugins: { legend: { position: "top" } },
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "top", labels: { font: { size: 11 }, boxWidth: 12 } } },
         scales: {
-          y:  { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "Proje Sayısı" } },
-          y2: { beginAtZero: true, max: 100, position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "İlerleme %" } },
+          y:  { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "Proje Sayısı", font: { size: 11 } } },
+          y2: { beginAtZero: true, max: 100, position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "İlerleme %", font: { size: 11 } } },
         },
       },
     });
@@ -137,9 +141,9 @@ const Reports = (() => {
         ],
       },
       options: {
-        responsive: true,
-        plugins: { legend: { position: "top" } },
-        scales: { y: { beginAtZero: true, ticks: { precision: 0 }, stacked: false }, x: { ticks: { maxRotation: 45 } } },
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "top", labels: { font: { size: 11 }, boxWidth: 12 } } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { ticks: { maxRotation: 45, font: { size: 10 } } } },
       },
     });
   }
@@ -177,9 +181,9 @@ const Reports = (() => {
         datasets: [{ data: [spent, remaining], backgroundColor: ["#e74c3c", "#27ae60"], borderWidth: 2 }],
       },
       options: {
-        responsive: true,
+        responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { position: "bottom" },
+          legend: { position: "bottom", labels: { font: { size: 11 }, boxWidth: 12 } },
           tooltip: { callbacks: { label: c => ` ${c.label}: ${UI.fmtMoney(c.raw)} ₺ (%${bud.usage_percent})` } },
         },
       },
@@ -209,9 +213,9 @@ const Reports = (() => {
         ],
       },
       options: {
-        responsive: true,
-        plugins: { legend: { position: "top" } },
-        scales: { y: { beginAtZero: true, title: { display: true, text: "₺" } }, x: { ticks: { maxRotation: 45 } } },
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "top", labels: { font: { size: 11 }, boxWidth: 12 } } },
+        scales: { y: { beginAtZero: true, title: { display: true, text: "₺", font: { size: 11 } } }, x: { ticks: { maxRotation: 45, font: { size: 10 } } } },
       },
     });
 

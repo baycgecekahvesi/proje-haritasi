@@ -858,8 +858,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #c7d2fe; border-c
 .rp-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
 .rp-card.wide { grid-column: 1 / -1; }
 
-.rp-chart-wrap { position: relative; }
-.rp-chart-wrap.tall { height: 280px; }
+.rp-chart-wrap { position: relative; height: 220px; }
+.rp-chart-wrap.tall { height: 260px; }
 
 .rp-kpi-list { display: flex; flex-direction: column; gap: 0; }
 .rp-kpi-row {
