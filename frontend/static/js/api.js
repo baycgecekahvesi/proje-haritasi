@@ -19,7 +19,7 @@ const API = (() => {
 
     const res = await fetch(`${BASE}${path}`, { method, headers, body: payload });
 
-    if (res.status === 401) {
+    if (res.status === 401 && path !== "/auth/login") {
       clearToken();
       window.dispatchEvent(new CustomEvent("auth:expired"));
       throw new Error("Oturum süresi doldu. Lütfen tekrar giriş yapın.");
