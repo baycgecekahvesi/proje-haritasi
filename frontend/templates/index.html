@@ -1,0 +1,260 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Otomasyon Proje Takip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=3" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+</head>
+<body>
+
+  <!-- ===================== GİRİŞ EKRANI ===================== -->
+  <div id="login-view" class="login-screen">
+    <form id="login-form" class="login-card">
+      <div class="brand">
+        <span class="brand-mark">⚙️</span>
+        <h1>Otomasyon Takip</h1>
+      </div>
+      <p class="login-sub">Endüstriyel Otomasyon &amp; MES Proje Yönetimi</p>
+      <label>Kullanıcı Adı
+        <input type="text" id="login-username" autocomplete="username" required />
+      </label>
+      <label>Parola
+        <input type="password" id="login-password" autocomplete="current-password" required />
+      </label>
+      <button type="submit" class="btn btn-primary btn-block">Giriş Yap</button>
+      <div id="login-error" class="form-error"></div>
+    </form>
+  </div>
+
+  <!-- ===================== UYGULAMA ===================== -->
+  <div id="app-view" class="app hidden">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="brand-mark">⚙️</span>
+        <strong>Otomasyon Takip</strong>
+      </div>
+      <nav class="tabs">
+        <button class="tab active" data-tab="map">🗺️ Harita</button>
+        <button class="tab" data-tab="projects">📋 Projeler</button>
+        <button class="tab" data-tab="reports">📊 Raporlar</button>
+        <button class="tab" data-tab="techdocs">📚 Teknik Dökümanlar</button>
+        <button class="tab" data-tab="specs">📋 Teknik Şartnameler</button>
+        <button class="tab" data-tab="skills">🧠 Skill Ekosistemi</button>
+        <button class="tab" data-tab="tasks">⚙️ Görev Takip</button>
+        <button class="tab" data-tab="users" id="tab-users" hidden>👤 Kullanıcılar</button>
+      </nav>
+      <div class="topbar-right">
+        <div id="notif-wrap" class="notif-wrap">
+          <button id="notif-btn" class="btn btn-ghost notif-btn" title="Bildirimler">🔔<span id="notif-badge" class="notif-badge hidden">0</span></button>
+          <div id="notif-panel" class="notif-panel hidden">
+            <div class="notif-panel-head">
+              <span>Bildirimler</span>
+              <button id="notif-oku-hepsi" class="btn btn-ghost btn-xs">Tümünü okundu yap</button>
+            </div>
+            <div id="notif-list" class="notif-list"><p class="muted" style="padding:12px">Yükleniyor…</p></div>
+          </div>
+        </div>
+        <span id="current-user" class="user-chip"></span>
+        <button id="logout-btn" class="btn btn-ghost">Çıkış</button>
+      </div>
+    </header>
+
+    <!-- Özet istatistik şeridi -->
+    <section id="stat-bar" class="stat-bar"></section>
+
+    <main class="content">
+
+      <!-- ---------- HARİTA SEKMESİ ---------- -->
+      <section id="panel-map" class="panel active">
+        <div class="map-layout">
+          <div class="map-wrap">
+            <div class="map-toolbar">
+              <h2>Türkiye Otomasyon & MES Proje Haritası</h2>
+              <div class="legend">
+                <span><i style="background:#4f6ef7"></i> Aktif</span>
+                <span><i style="background:#f39c12"></i> Beklemede</span>
+                <span><i style="background:#27ae60"></i> Tamamlandı</span>
+                <span><i style="background:#e74c3c"></i> Gecikmeli</span>
+                <span><i style="background:#dde4f5"></i> Projesiz</span>
+              </div>
+            </div>
+            <div id="map-container" class="map-container"></div>
+          </div>
+          <aside class="side-panel">
+            <h3 id="side-province">Bir il seçin</h3>
+            <div id="side-projects" class="side-projects">
+              <p class="muted">Haritadan bir ile tıklayarak o ildeki projeleri görüntüleyin.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ---------- PROJELER SEKMESİ ---------- -->
+      <section id="panel-projects" class="panel">
+        <div class="panel-head">
+          <h2>Projeler</h2>
+          <div class="filters">
+            <input type="search" id="filter-search" placeholder="Proje ara…" />
+            <select id="filter-province"><option value="">Tüm iller</option></select>
+            <select id="filter-status">
+              <option value="">Tüm durumlar</option>
+              <option value="aktif">Aktif</option>
+              <option value="beklemede">Beklemede</option>
+              <option value="tamamlandi">Tamamlandı</option>
+              <option value="iptal">İptal</option>
+            </select>
+            <button id="new-project-btn" class="btn btn-primary editor-only">+ Yeni Proje</button>
+          </div>
+        </div>
+        <div id="projects-list" class="cards-grid"></div>
+        <div id="projects-pager" class="pager"></div>
+      </section>
+
+      <!-- ---------- RAPORLAR SEKMESİ ---------- -->
+      <section id="panel-reports" class="panel">
+        <div class="panel-head"><h2>Raporlar</h2></div>
+        <div class="report-grid">
+          <div class="chart-card"><h3>İl Bazlı Proje Sayısı</h3><canvas id="chart-province"></canvas></div>
+          <div class="chart-card"><h3>Bütçe Kullanımı</h3><canvas id="chart-budget"></canvas></div>
+          <div class="chart-card wide">
+            <h3>Geciken Projeler</h3>
+            <div id="timeline-list" class="timeline-list"></div>
+          </div>
+          <div class="chart-card wide">
+            <h3>Gantt Şeması — Proje Takvimi</h3>
+            <div id="gantt-container" class="gantt-wrap"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- TEKNİK DÖKÜMANLAR SEKMESİ ---------- -->
+      <section id="panel-techdocs" class="panel">
+        <div class="panel-head">
+          <h2>Teknik Dökümanlar</h2>
+          <div class="filters">
+            <input type="search" id="td-search" placeholder="Döküman ara…" />
+            <select id="td-category">
+              <option value="">Tüm kategoriler</option>
+              <option value="plc_scada">PLC/SCADA</option>
+              <option value="robot">Robot Sistemleri</option>
+              <option value="mes">MES</option>
+              <option value="vizyon">Vizyon Sistemi</option>
+              <option value="elektrik">Elektrik Altyapı</option>
+              <option value="servo">Servo/Hareket</option>
+              <option value="genel">Genel</option>
+            </select>
+            <button id="td-upload-btn" class="btn btn-primary editor-only">+ Döküman Yükle</button>
+          </div>
+        </div>
+        <div id="techdocs-list" class="td-grid"></div>
+      </section>
+
+      <!-- ---------- TEKNİK ŞARTNAMELER SEKMESİ ---------- -->
+      <section id="panel-specs" class="panel">
+        <div class="panel-head">
+          <h2>Teknik Şartnameler</h2>
+          <div class="filters">
+            <input type="search" id="sp-search" placeholder="Şartname ara…" />
+            <select id="sp-type">
+              <option value="">Tüm tipler</option>
+              <option value="plc_scada">PLC/SCADA</option>
+              <option value="robot">Robot Sistemleri</option>
+              <option value="mes">MES</option>
+              <option value="vizyon">Vizyon Sistemi</option>
+              <option value="elektrik">Elektrik Altyapı</option>
+              <option value="servo">Servo/Hareket</option>
+              <option value="genel">Genel</option>
+            </select>
+            <select id="sp-status">
+              <option value="">Tüm durumlar</option>
+              <option value="taslak">Taslak</option>
+              <option value="inceleme">İncelemede</option>
+              <option value="onaylı">Onaylı</option>
+              <option value="revize">Revize</option>
+            </select>
+            <button id="sp-new-btn" class="btn btn-primary editor-only">+ Yeni Şartname</button>
+          </div>
+        </div>
+        <div id="specs-list" class="sp-grid"></div>
+      </section>
+
+      <!-- ---------- SKILL EKOSİSTEMİ SEKMESİ ---------- -->
+      <section id="panel-skills" class="panel">
+        <div class="panel-head">
+          <h2>Skill Ekosistemi</h2>
+        </div>
+
+        <!-- Rol Kartları -->
+        <div class="skill-roles-bar" id="skill-roles-bar"></div>
+
+        <!-- Boş durum -->
+        <div id="skill-empty" class="skill-empty">
+          <p>Detayları görüntülemek için yukarıdan bir rol seçin.</p>
+        </div>
+
+        <!-- Seçili rol detayı -->
+        <div id="skill-detail" class="skill-detail hidden">
+          <div class="skill-detail-header">
+            <div class="skill-role-title" id="skill-role-title"></div>
+            <div class="skill-inner-tabs">
+              <button class="skill-itab active" data-itab="tasks">📋 Görev Şablonları</button>
+              <button class="skill-itab" data-itab="refs">📚 Referans Dokümanlar</button>
+            </div>
+          </div>
+          <div id="skill-detail-body"></div>
+        </div>
+      </section>
+
+      <!-- ---------- GÖREV TAKİP SEKMESİ ---------- -->
+      <section id="panel-tasks" class="panel">
+        <div class="panel-head"><h2>Görev Takip</h2></div>
+        <div id="tasks-stats" class="tk-stats-bar"></div>
+        <div id="tasks-toolbar" class="tk-toolbar"></div>
+        <div id="tasks-panel-body" class="tk-body"></div>
+      </section>
+
+      <!-- ---------- KULLANICILAR SEKMESİ ---------- -->
+      <section id="panel-users" class="panel">
+        <div class="panel-head">
+          <h2>Kullanıcılar</h2>
+          <button id="new-user-btn" class="btn btn-primary">+ Yeni Kullanıcı</button>
+        </div>
+        <div id="users-list" class="cards-grid"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ===================== MODAL ===================== -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" id="modal-close">✕</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast bildirimleri -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ===================== SCRIPTLER ===================== -->
+  <script src="{% static 'js/api.js' %}?v=2"></script>
+  <script src="{% static 'js/provinces.js' %}?v=2"></script>
+  <script src="{% static 'js/auth.js' %}?v=2"></script>
+  <script src="{% static 'js/map.js' %}?v=2"></script>
+  <script src="{% static 'js/projects.js' %}?v=2"></script>
+  <script src="{% static 'js/budget.js' %}?v=2"></script>
+  <script src="{% static 'js/documents.js' %}?v=2"></script>
+  <script src="{% static 'js/reports.js' %}?v=2"></script>
+  <script src="{% static 'js/techdocs.js' %}?v=2"></script>
+  <script src="{% static 'js/specs.js' %}?v=2"></script>
+  <script src="{% static 'js/skills.js' %}?v=2"></script>
+  <script src="{% static 'js/tasks.js' %}?v=6"></script>
+  <script src="{% static 'js/app.js' %}?v=4"></script>
+</body>
+</html>

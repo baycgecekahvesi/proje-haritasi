@@ -1,0 +1,767 @@
+{
+  "skill_ecosystem_version": "1.0",
+  "birim": "Endüstriyel Otomasyon Birimi",
+  "olusturma_tarihi": "2026-06-22",
+  "aciklama": "Endüstriyel otomasyon birimindeki tüm rollerin skill tanımları. Hem AI asistan tetikleyici hem proje takip sistemi görev şablonu olarak kullanılır.",
+
+  "roller": [
+
+    {
+      "rol_id": "PLCProg",
+      "rol_adi": "PLC Programcısı",
+      "skill_dosyasi": "plc-programcisi/SKILL.md",
+      "renk_kodu": "#2563EB",
+      "ikon": "🔷",
+      "sorumluluklar": [
+        "PLC yazılımı geliştirme ve test etme",
+        "I/O listesi ve tag veritabanı oluşturma",
+        "FAT/SAT prosedürlerini uygulama",
+        "Haberleşme protokollerini konfigüre etme",
+        "As-built yazılım dokümantasyonu"
+      ],
+      "yetkinlikler": [
+        "IEC 61131-3 programlama dilleri",
+        "Siemens TIA Portal / Allen-Bradley Studio 5000 / Beckhoff TwinCAT",
+        "Profibus / Profinet / EtherNet/IP / Modbus",
+        "PLC-HMI/SCADA entegrasyonu",
+        "Yazılım versiyon yönetimi"
+      ],
+      "gorev_sablonlari": [
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "I/O Listesi Hazırlama",
+          "faz": "Tasarım",
+          "min_gun": 2,
+          "max_gun": 3,
+          "onkoşullar": ["ELK-001", "ELK-006"],
+          "teslimati": "Excel I/O Listesi"
+        },
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "Tag Veritabanı Oluşturma",
+          "faz": "Tasarım",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["PLC-001"],
+          "teslimati": "TIA/Studio tag export"
+        },
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "Ana Program Yapısı",
+          "faz": "Geliştirme",
+          "min_gun": 2,
+          "max_gun": 4,
+          "onkoşullar": ["PLC-001", "ELK-007"],
+          "teslimati": "PLC proje dosyası v1"
+        },
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "Güvenlik Bloklarının Yazılması",
+          "faz": "Geliştirme",
+          "min_gun": 3,
+          "max_gun": 5,
+          "onkoşullar": ["PLC-003"],
+          "teslimati": "Safety FB kütüphanesi"
+        },
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "Sıra Kontrol Programlama",
+          "faz": "Geliştirme",
+          "min_gun": 3,
+          "max_gun": 7,
+          "onkoşullar": ["PLC-003", "PLC-004"],
+          "teslimati": "Sequence FB'leri"
+        },
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "Alarm Yönetimi",
+          "faz": "Geliştirme",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["PLC-003"],
+          "teslimati": "Alarm listesi + PLC kodu"
+        },
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "HMI Haberleşme Konfigürasyonu",
+          "faz": "Entegrasyon",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["PLC-002", "SCADA-003"],
+          "teslimati": "Haberleşme test raporu"
+        },
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "Offline Simülasyon ve Test",
+          "faz": "Test",
+          "min_gun": 2,
+          "max_gun": 3,
+          "onkoşullar": ["PLC-003", "PLC-004", "PLC-005"],
+          "teslimati": "Simülasyon test raporu"
+        },
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "FAT Hazırlığı ve Uygulama",
+          "faz": "Test",
+          "min_gun": 2,
+          "max_gun": 5,
+          "onkoşullar": ["PLC-008"],
+          "teslimati": "İmzalı FAT protokolü"
+        },
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "Saha Devreye Alma",
+          "faz": "Devreye Alma",
+          "min_gun": 3,
+          "max_gun": 10,
+          "onkoşullar": ["PLC-009", "SAHA-010"],
+          "teslimati": "Commissioning raporu"
+        },
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "SAT Uygulama ve Onay",
+          "faz": "Kabul",
+          "min_gun": 1,
+          "max_gun": 3,
+          "onkoşullar": ["PLC-010"],
+          "teslimati": "İmzalı SAT protokolü"
+        },
+        {
+          "gorev_id_prefix": "PLC",
+          "gorev_adi": "As-Built Dokümantasyon",
+          "faz": "Kapanış",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["PLC-011"],
+          "teslimati": "As-built PLC projesi + değişiklik listesi"
+        }
+      ],
+      "durum_alanlari": [
+        "rol", "gorev_id", "gorev_adi", "durum",
+        "tamamlanma_yuzdesi", "engel", "notlar", "guncelleme_tarihi"
+      ]
+    },
+
+    {
+      "rol_id": "SCADAEng",
+      "rol_adi": "SCADA Mühendisi",
+      "skill_dosyasi": "scada-muhendisi/SKILL.md",
+      "renk_kodu": "#7C3AED",
+      "ikon": "🖥️",
+      "sorumluluklar": [
+        "SCADA/HMI ekran tasarımı ve geliştirme",
+        "Tag veritabanı ve historian yönetimi",
+        "Alarm sistemi konfigürasyonu",
+        "OPC/MQTT/API entegrasyonları",
+        "Operatör eğitimi ve kullanım kılavuzu"
+      ],
+      "yetkinlikler": [
+        "WinCC / Ignition / iFIX / InTouch / AVEVA",
+        "ISA-101 HMI tasarım standartları",
+        "ISA-18.2 alarm yönetimi",
+        "OPC-UA/DA, MQTT, REST API",
+        "SQL / Historian veritabanları"
+      ],
+      "gorev_sablonlari": [
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "Mimari ve Platform Seçimi",
+          "faz": "Tasarım",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["ELK-001"],
+          "teslimati": "SCADA mimari dokümanı"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "Tag İsimlendirme Standardı",
+          "faz": "Tasarım",
+          "min_gun": 1,
+          "max_gun": 1,
+          "onkoşullar": ["SCADA-001"],
+          "teslimati": "Tag naming convention dokümanı"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "Tag Veritabanı Oluşturma",
+          "faz": "Geliştirme",
+          "min_gun": 2,
+          "max_gun": 5,
+          "onkoşullar": ["SCADA-002", "PLC-002"],
+          "teslimati": "Tag veritabanı export"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "Ana Mimik Ekranları",
+          "faz": "Geliştirme",
+          "min_gun": 3,
+          "max_gun": 7,
+          "onkoşullar": ["SCADA-003"],
+          "teslimati": "Ana ekranlar (onaylı)"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "Detay Ekranları",
+          "faz": "Geliştirme",
+          "min_gun": 3,
+          "max_gun": 7,
+          "onkoşullar": ["SCADA-004"],
+          "teslimati": "Detay ekranları (onaylı)"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "Alarm Konfigürasyonu",
+          "faz": "Geliştirme",
+          "min_gun": 2,
+          "max_gun": 3,
+          "onkoşullar": ["SCADA-003", "PLC-006"],
+          "teslimati": "Alarm listesi + ISA-18.2 uyumluluk"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "Historian Konfigürasyonu",
+          "faz": "Geliştirme",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["SCADA-003"],
+          "teslimati": "Historian arşiv planı"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "Kullanıcı Yetkilendirme",
+          "faz": "Geliştirme",
+          "min_gun": 1,
+          "max_gun": 1,
+          "onkoşullar": ["SCADA-001"],
+          "teslimati": "User role matrisi"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "OPC/Haberleşme Bağlantısı",
+          "faz": "Entegrasyon",
+          "min_gun": 2,
+          "max_gun": 3,
+          "onkoşullar": ["SCADA-003", "PLC-007"],
+          "teslimati": "Haberleşme test raporu"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "Raporlama Modülü",
+          "faz": "Geliştirme",
+          "min_gun": 2,
+          "max_gun": 4,
+          "onkoşullar": ["SCADA-007"],
+          "teslimati": "Rapor şablonları"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "FAT Uygulama",
+          "faz": "Test",
+          "min_gun": 2,
+          "max_gun": 4,
+          "onkoşullar": ["SCADA-009"],
+          "teslimati": "İmzalı SCADA FAT protokolü"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "Saha Devreye Alma",
+          "faz": "Devreye Alma",
+          "min_gun": 2,
+          "max_gun": 5,
+          "onkoşullar": ["SCADA-011", "PLC-010"],
+          "teslimati": "SCADA canlı sistem"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "Operatör Eğitimi",
+          "faz": "Kapanış",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["SCADA-012"],
+          "teslimati": "Eğitim kayıt formu + kılavuz"
+        },
+        {
+          "gorev_id_prefix": "SCADA",
+          "gorev_adi": "As-Built Dokümantasyon",
+          "faz": "Kapanış",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["SCADA-013"],
+          "teslimati": "As-built SCADA projesi + ekran kataloğu"
+        }
+      ],
+      "durum_alanlari": [
+        "rol", "gorev_id", "gorev_adi", "platform",
+        "durum", "tamamlanma_yuzdesi", "screen_sayisi",
+        "tag_sayisi", "engel", "notlar", "guncelleme_tarihi"
+      ]
+    },
+
+    {
+      "rol_id": "SahaTech",
+      "rol_adi": "Saha Teknisyeni",
+      "skill_dosyasi": "saha-teknisyeni/SKILL.md",
+      "renk_kodu": "#D97706",
+      "ikon": "🔧",
+      "sorumluluklar": [
+        "Elektrik pano ve saha ekipmanı montajı",
+        "Kablo döşeme ve bağlantı",
+        "Cihaz devreye alma ve kalibrasyon",
+        "I/O checkout ve fonksiyonel test desteği",
+        "Saha arıza tespiti ve onarım",
+        "Güvenli çalışma prosedürlerine uyum"
+      ],
+      "yetkinlikler": [
+        "Elektrik pano montajı ve bağlantısı",
+        "Kablo ölçüm ve test teknikleri",
+        "LOTO ve çalışma izni prosedürleri",
+        "Sensör, aktüatör, inverter devreye alma",
+        "Multimetre, megger, tarayıcı kullanımı"
+      ],
+      "gorev_sablonlari": [
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Saha Ön Keşif ve Ölçüm",
+          "faz": "Hazırlık",
+          "min_gun": 0.5,
+          "max_gun": 1,
+          "onkoşullar": [],
+          "teslimati": "Keşif raporu + fotoğraflar"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Malzeme Teslim Alma ve Kontrol",
+          "faz": "Hazırlık",
+          "min_gun": 0.5,
+          "max_gun": 0.5,
+          "onkoşullar": [],
+          "teslimati": "İrsaliye onaylı malzeme listesi"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Pano/Kabin Mekanik Montajı",
+          "faz": "Kurulum",
+          "min_gun": 1,
+          "max_gun": 3,
+          "onkoşullar": ["SAHA-001", "SAHA-002"],
+          "teslimati": "Montaj fotoğrafları + kontrol listesi"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Kablo Kanal ve Tray Döşeme",
+          "faz": "Kurulum",
+          "min_gun": 1,
+          "max_gun": 5,
+          "onkoşullar": ["SAHA-003"],
+          "teslimati": "Döşeme fotoğrafları"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Güç Kablolarının Çekilmesi",
+          "faz": "Kurulum",
+          "min_gun": 1,
+          "max_gun": 3,
+          "onkoşullar": ["SAHA-004"],
+          "teslimati": "Kablo listesi (işaretli)"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Sinyal/Kontrol Kablolarının Çekilmesi",
+          "faz": "Kurulum",
+          "min_gun": 1,
+          "max_gun": 3,
+          "onkoşullar": ["SAHA-004"],
+          "teslimati": "Sinyal kablo listesi (işaretli)"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Pano İç Bağlantıları",
+          "faz": "Kurulum",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["SAHA-005", "SAHA-006"],
+          "teslimati": "Bağlantı kontrol formu"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Saha Cihazları Montajı",
+          "faz": "Kurulum",
+          "min_gun": 1,
+          "max_gun": 3,
+          "onkoşullar": ["SAHA-004"],
+          "teslimati": "Montaj fotoğrafları + cihaz konumları"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Kablo Süreklilik ve İzolasyon Testleri",
+          "faz": "Test",
+          "min_gun": 0.5,
+          "max_gun": 1,
+          "onkoşullar": ["SAHA-007"],
+          "teslimati": "Kablo test raporu (megger değerleri)"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "I/O Checkout (Sinyal Doğrulama)",
+          "faz": "Devreye Alma",
+          "min_gun": 1,
+          "max_gun": 3,
+          "onkoşullar": ["SAHA-009", "PLC-003"],
+          "teslimati": "İmzalı I/O checkout formu"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Cihaz Devreye Alma",
+          "faz": "Devreye Alma",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["SAHA-010"],
+          "teslimati": "Cihaz parametre listesi"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Fonksiyonel Test Desteği",
+          "faz": "Test",
+          "min_gun": 1,
+          "max_gun": 3,
+          "onkoşullar": ["SAHA-011", "PLC-008"],
+          "teslimati": "Saha test desteği kaydı"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Red-line (As-Built) Güncelleme",
+          "faz": "Kapanış",
+          "min_gun": 0.5,
+          "max_gun": 1,
+          "onkoşullar": ["SAHA-012"],
+          "teslimati": "As-built şemalar (red-line)"
+        },
+        {
+          "gorev_id_prefix": "SAHA",
+          "gorev_adi": "Saha Temizlik ve Teslim",
+          "faz": "Kapanış",
+          "min_gun": 0.5,
+          "max_gun": 0.5,
+          "onkoşullar": ["SAHA-013"],
+          "teslimati": "Teslim tutanağı"
+        }
+      ],
+      "durum_alanlari": [
+        "rol", "gorev_id", "gorev_adi", "konum",
+        "durum", "tamamlanma_yuzdesi",
+        "guvenlik_izni_alindi", "loto_uygulandi",
+        "engel", "notlar", "guncelleme_tarihi"
+      ]
+    },
+
+    {
+      "rol_id": "ElkEng",
+      "rol_adi": "Elektrik/Otomasyon Mühendisi",
+      "skill_dosyasi": "elektrik-otomasyon-muhendisi/SKILL.md",
+      "renk_kodu": "#059669",
+      "ikon": "⚡",
+      "sorumluluklar": [
+        "Otomasyon mimarisi ve sistem tasarımı",
+        "Elektrik proje hesapları ve tek hat şemaları",
+        "Ekipman seçimi ve teknik şartname",
+        "BOM ve tedarik süreçleri",
+        "Risk değerlendirmesi ve güvenlik analizi",
+        "FAT denetimi ve mühendislik onayları"
+      ],
+      "yetkinlikler": [
+        "IEC 60364 elektrik standartları",
+        "Makine direktifi (2006/42/EC) ve CE",
+        "Fonksiyonel güvenlik (IEC 62061 / ISO 13849)",
+        "Ekipman boyutlandırma hesapları",
+        "AutoCAD Electrical / EPLAN"
+      ],
+      "gorev_sablonlari": [
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "Otomasyon Mimarisi Tasarımı",
+          "faz": "Tasarım",
+          "min_gun": 2,
+          "max_gun": 3,
+          "onkoşullar": [],
+          "teslimati": "Mimari blok şema + platform kararı"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "Ekipman Listesi ve Ön Seçim",
+          "faz": "Tasarım",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["ELK-001"],
+          "teslimati": "Ekipman ön seçim tablosu"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "Güç Dağıtım Tek Hat Şeması",
+          "faz": "Tasarım",
+          "min_gun": 2,
+          "max_gun": 4,
+          "onkoşullar": ["ELK-002"],
+          "teslimati": "Onaylı SLD"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "Kablo Kesit ve Koruma Hesabı",
+          "faz": "Tasarım",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["ELK-003"],
+          "teslimati": "Hesap raporu"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "Pano Layout Tasarımı",
+          "faz": "Tasarım",
+          "min_gun": 1,
+          "max_gun": 3,
+          "onkoşullar": ["ELK-002", "ELK-003"],
+          "teslimati": "Panel layout (onaylı)"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "I/O Listesi (Mühendislik Sürümü)",
+          "faz": "Tasarım",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["ELK-001"],
+          "teslimati": "Master I/O listesi"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "Fonksiyonel Tasarım Dokümanı (FDS)",
+          "faz": "Tasarım",
+          "min_gun": 3,
+          "max_gun": 5,
+          "onkoşullar": ["ELK-001", "ELK-006"],
+          "teslimati": "Onaylı FDS dokümanı"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "Risk Değerlendirmesi",
+          "faz": "Tasarım",
+          "min_gun": 1,
+          "max_gun": 3,
+          "onkoşullar": ["ELK-007"],
+          "teslimati": "Risk matrisi (HAZOP/FMEA)"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "Teknik Şartname Hazırlama",
+          "faz": "Tedarik",
+          "min_gun": 2,
+          "max_gun": 4,
+          "onkoşullar": ["ELK-002", "ELK-004"],
+          "teslimati": "Teknik şartname seti"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "Malzeme Listesi (BOM) ve Teklif",
+          "faz": "Tedarik",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["ELK-009"],
+          "teslimati": "BOM + teklif formu"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "Tedarikçi/Teklif Değerlendirme",
+          "faz": "Tedarik",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["ELK-010"],
+          "teslimati": "Kıyaslama tablosu + öneri"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "FAT Planı Hazırlama",
+          "faz": "Test",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["ELK-007"],
+          "teslimati": "FAT planı + test prosedürleri"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "FAT Denetimi/Onayı",
+          "faz": "Test",
+          "min_gun": 1,
+          "max_gun": 3,
+          "onkoşullar": ["ELK-012", "PLC-009", "SCADA-011"],
+          "teslimati": "İmzalı FAT protokolü"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "Devreye Alma Mühendislik Desteği",
+          "faz": "Devreye Alma",
+          "min_gun": 3,
+          "max_gun": 10,
+          "onkoşullar": ["ELK-013"],
+          "teslimati": "Commissioning mühendis raporu"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "CE/Teknik Dosya Hazırlama",
+          "faz": "Kapanış",
+          "min_gun": 2,
+          "max_gun": 5,
+          "onkoşullar": ["ELK-014"],
+          "teslimati": "Teknik dosya (DoC dahil)"
+        },
+        {
+          "gorev_id_prefix": "ELK",
+          "gorev_adi": "As-Built Onayı",
+          "faz": "Kapanış",
+          "min_gun": 1,
+          "max_gun": 1,
+          "onkoşullar": ["ELK-015"],
+          "teslimati": "Onaylı as-built şema seti"
+        }
+      ],
+      "durum_alanlari": [
+        "rol", "gorev_id", "gorev_adi", "dokuman_tipi",
+        "revizyon", "durum", "tamamlanma_yuzdesi",
+        "engel", "notlar", "guncelleme_tarihi"
+      ]
+    },
+
+    {
+      "rol_id": "PrjMgr",
+      "rol_adi": "Proje Müdürü",
+      "skill_dosyasi": "proje-muduru/SKILL.md",
+      "renk_kodu": "#DC2626",
+      "ikon": "📋",
+      "sorumluluklar": [
+        "Proje planlaması ve zaman çizelgesi yönetimi",
+        "Kaynak planlaması ve takım koordinasyonu",
+        "Müşteri iletişimi ve stakeholder yönetimi",
+        "Risk ve değişiklik yönetimi",
+        "Maliyet ve bütçe takibi",
+        "Proje raporlama ve durum toplantıları"
+      ],
+      "yetkinlikler": [
+        "MS Project / primavera / Gantt araçları",
+        "Endüstriyel otomasyon proje yaşam döngüsü",
+        "FAT/SAT süreç yönetimi",
+        "Sözleşme ve kapsam yönetimi",
+        "Teknik ekip koordinasyonu"
+      ],
+      "gorev_sablonlari": [
+        {
+          "gorev_id_prefix": "PM",
+          "gorev_adi": "Proje Kick-off ve Kapsam Tanımı",
+          "faz": "Başlangıç",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": [],
+          "teslimati": "Kick-off tutanağı + scope dokümanı"
+        },
+        {
+          "gorev_id_prefix": "PM",
+          "gorev_adi": "Proje Planı ve Gantt Hazırlama",
+          "faz": "Planlama",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["PM-001"],
+          "teslimati": "Onaylı proje planı"
+        },
+        {
+          "gorev_id_prefix": "PM",
+          "gorev_adi": "Kaynak Planlaması",
+          "faz": "Planlama",
+          "min_gun": 0.5,
+          "max_gun": 1,
+          "onkoşullar": ["PM-002"],
+          "teslimati": "Kaynak takvimi"
+        },
+        {
+          "gorev_id_prefix": "PM",
+          "gorev_adi": "Risk Kaydı Oluşturma",
+          "faz": "Planlama",
+          "min_gun": 0.5,
+          "max_gun": 1,
+          "onkoşullar": ["PM-001"],
+          "teslimati": "Risk matrisi"
+        },
+        {
+          "gorev_id_prefix": "PM",
+          "gorev_adi": "Haftalık Durum Raporları",
+          "faz": "Yürütme",
+          "min_gun": 0.5,
+          "max_gun": 0.5,
+          "onkoşullar": ["PM-002"],
+          "teslimati": "Haftalık rapor (her hafta)",
+          "tekrar": "haftalık"
+        },
+        {
+          "gorev_id_prefix": "PM",
+          "gorev_adi": "Milestone İzleme ve Güncelleme",
+          "faz": "Yürütme",
+          "min_gun": 0.5,
+          "max_gun": 0.5,
+          "onkoşullar": ["PM-002"],
+          "teslimati": "Güncel milestone tablosu",
+          "tekrar": "haftalık"
+        },
+        {
+          "gorev_id_prefix": "PM",
+          "gorev_adi": "FAT Koordinasyonu",
+          "faz": "Test",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["ELK-012", "PLC-009", "SCADA-011"],
+          "teslimati": "FAT davet + gündem"
+        },
+        {
+          "gorev_id_prefix": "PM",
+          "gorev_adi": "Müşteri SAT Koordinasyonu",
+          "faz": "Kabul",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["PLC-010", "SCADA-012"],
+          "teslimati": "SAT davet + onay paketi"
+        },
+        {
+          "gorev_id_prefix": "PM",
+          "gorev_adi": "Proje Kapanış Raporu",
+          "faz": "Kapanış",
+          "min_gun": 1,
+          "max_gun": 2,
+          "onkoşullar": ["PLC-012", "SCADA-014", "ELK-016"],
+          "teslimati": "Kapanış raporu + lessons learned"
+        }
+      ],
+      "durum_alanlari": [
+        "rol", "gorev_id", "gorev_adi", "durum",
+        "tamamlanma_yuzdesi", "engel", "notlar", "guncelleme_tarihi"
+      ]
+    }
+
+  ],
+
+  "proje_fazlari": [
+    "Başlangıç",
+    "Planlama",
+    "Tasarım",
+    "Tedarik",
+    "Geliştirme",
+    "Entegrasyon",
+    "Test",
+    "Devreye Alma",
+    "Kabul",
+    "Yürütme",
+    "Kapanış"
+  ],
+
+  "gorev_durumlari": [
+    { "deger": "Planlandı", "renk": "#6B7280", "ikon": "⬜" },
+    { "deger": "Devam Ediyor", "renk": "#2563EB", "ikon": "🔵" },
+    { "deger": "İncelemede", "renk": "#7C3AED", "ikon": "🟣" },
+    { "deger": "Tamamlandı", "renk": "#059669", "ikon": "✅" },
+    { "deger": "Engellendi", "renk": "#DC2626", "ikon": "🔴" },
+    { "deger": "Onaylandı", "renk": "#D97706", "ikon": "🏆" }
+  ]
+}
