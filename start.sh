@@ -8,13 +8,13 @@ echo "=== Static dosyalar toplanıyor ==="
 python manage.py collectstatic --noinput
 
 echo "=== Seed: demo verisi ==="
-python manage.py seed_demo || true
+python manage.py seed_demo || echo "UYARI: seed_demo başarısız (mevcut veri olabilir, devam ediliyor)"
 
 echo "=== Seed: skill ekosistemi ==="
-python manage.py seed_skills || true
+python manage.py seed_skills || echo "UYARI: seed_skills başarısız, devam ediliyor"
 
 echo "=== Seed: teknik dökümanlar ==="
-python manage.py seed_docs || true
+python manage.py seed_docs || echo "UYARI: seed_docs başarısız, devam ediliyor"
 
 echo "=== Gunicorn başlatılıyor ==="
 exec gunicorn config.wsgi:application \

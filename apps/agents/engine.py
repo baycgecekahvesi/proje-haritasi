@@ -157,24 +157,22 @@ def run_risk_agent(gorevler=None):
                 "gorev_id": g.gorev_id,
             })
 
-    # FAT hazırlık
-    fat_onk = ["ELK-012", "PLC-009", "SCADA-011"]
-    fat_durum = {gid: (gorev_map[gid].durum if gid in gorev_map else "Bulunamadı") for gid in fat_onk}
-    fat_hazir = all(d == "Tamamlandı" for d in fat_durum.values())
-    if not fat_hazir:
-        eksik = [f"{gid}({d})" for gid, d in fat_durum.items() if d != "Tamamlandı"]
+    # FAT hazırlık — "Kabul" veya "Test" fazındaki FAT görevleri DB'den dinamik okunur
+    fat_gorevler = [g for g in gorevler if "FAT" in (g.gorev_adi or "").upper() or g.faz in ("Kabul",)]
+    fat_hazir = bool(fat_gorevler) and all(g.durum == "Tamamlandı" for g in fat_gorevler)
+    if fat_gorevler and not fat_hazir:
+        eksik = [f"{g.gorev_id}({g.durum})" for g in fat_gorevler if g.durum != "Tamamlandı"]
         riskler.append({
             "seviye": "bilgi",
             "mesaj": f"FAT için hazır değil. Bekleyen: {', '.join(eksik)}",
             "gorev_id": None,
         })
 
-    # SAT hazırlık
-    sat_onk = ["PLC-010", "SCADA-012"]
-    sat_durum = {gid: (gorev_map[gid].durum if gid in gorev_map else "Bulunamadı") for gid in sat_onk}
-    sat_hazir = all(d == "Tamamlandı" for d in sat_durum.values())
-    if not sat_hazir:
-        eksik = [f"{gid}({d})" for gid, d in sat_durum.items() if d != "Tamamlandı"]
+    # SAT hazırlık — "Devreye Alma" fazındaki SAT görevleri
+    sat_gorevler = [g for g in gorevler if "SAT" in (g.gorev_adi or "").upper() or g.faz in ("Devreye Alma",)]
+    sat_hazir = bool(sat_gorevler) and all(g.durum == "Tamamlandı" for g in sat_gorevler)
+    if sat_gorevler and not sat_hazir:
+        eksik = [f"{g.gorev_id}({g.durum})" for g in sat_gorevler if g.durum != "Tamamlandı"]
         riskler.append({
             "seviye": "bilgi",
             "mesaj": f"SAT için hazır değil. Bekleyen: {', '.join(eksik)}",

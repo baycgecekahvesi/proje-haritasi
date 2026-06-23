@@ -45,7 +45,7 @@ def upload_techdoc(
     _validate(file)
     if category not in TechnicalDocument.Category.values:
         category = TechnicalDocument.Category.GENERAL
-    uploader = User.objects.filter(id=request.auth["user_id"]).first()
+    uploader = get_object_or_404(User, id=request.auth["user_id"])
     return TechnicalDocument.objects.create(
         title=title or file.name,
         description=description,

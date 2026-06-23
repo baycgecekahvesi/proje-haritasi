@@ -140,22 +140,18 @@ def gantt() -> list[dict]:
 def progress_buckets() -> list[dict]:
     """Projeleri ilerleme yüzdesine göre gruplar: 0-25, 25-50, 50-75, 75-99, 100."""
     buckets = [
-        {"label": "0–25%",   "min": 0,   "max": 25},
-        {"label": "25–50%",  "min": 25,  "max": 50},
-        {"label": "50–75%",  "min": 50,  "max": 75},
-        {"label": "75–99%",  "min": 75,  "max": 99},
-        {"label": "Tamamlandı", "min": 100, "max": 100},
+        {"label": "0–25%",      "min": 0,   "max": 24,  "count": 0},
+        {"label": "25–50%",     "min": 25,  "max": 49,  "count": 0},
+        {"label": "50–75%",     "min": 50,  "max": 74,  "count": 0},
+        {"label": "75–99%",     "min": 75,  "max": 99,  "count": 0},
+        {"label": "Tamamlandı", "min": 100, "max": 100, "count": 0},
     ]
-    result = []
-    for b in buckets:
-        if b["min"] == b["max"]:
-            count = Project.objects.filter(progress=100).count()
-        else:
-            count = Project.objects.filter(
-                progress__gte=b["min"], progress__lt=b["max"] + 1
-            ).count()
-        result.append({"label": b["label"], "count": count})
-    return result
+    for progress in Project.objects.values_list("progress", flat=True):
+        for b in buckets:
+            if b["min"] <= progress <= b["max"]:
+                b["count"] += 1
+                break
+    return [{"label": b["label"], "count": b["count"]} for b in buckets]
 
 
 def monthly_activity() -> list[dict]:

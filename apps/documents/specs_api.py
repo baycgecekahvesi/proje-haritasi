@@ -3,7 +3,7 @@ from ninja import Router
 from ninja.errors import HttpError
 
 from apps.accounts.decorators import require_role
-from apps.accounts.models import User
+from apps.accounts.models import User  # noqa: F401 (used in get_object_or_404)
 
 from .models import TechnicalSpec
 from .schemas import TechSpecIn, TechSpecOut
@@ -31,7 +31,7 @@ def create_spec(request, payload: TechSpecIn):
         data["spec_type"] = TechnicalSpec.SpecType.GENERAL
     if data.get("status") not in TechnicalSpec.Status.values:
         data["status"] = TechnicalSpec.Status.DRAFT
-    user = User.objects.filter(id=request.auth["user_id"]).first()
+    user = get_object_or_404(User, id=request.auth["user_id"])
     spec = TechnicalSpec.objects.create(created_by=user, **data)
     return TechnicalSpec.objects.select_related("created_by", "project").get(id=spec.id)
 

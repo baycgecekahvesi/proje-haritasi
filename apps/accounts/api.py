@@ -89,11 +89,11 @@ def update_user(request, user_id: int, payload: UserPatch):
     user = get_object_or_404(User.objects.select_related("profile"), id=user_id)
     data = payload.dict(exclude_unset=True)
     role = data.pop("role", None)
+    meslek_rolu = data.pop("meslek_rolu", None)
     for field, value in data.items():
         setattr(user, field, value)
     if data:
         user.save(update_fields=list(data.keys()))
-    meslek_rolu = data.pop("meslek_rolu", None)
     if role:
         if role not in Role.values:
             raise HttpError(400, "Geçersiz rol")
@@ -110,6 +110,7 @@ def update_user(request, user_id: int, payload: UserPatch):
 
 
 @router.get("/users/by-role/{meslek_rolu}", response=list[UserOut], summary="Meslek rolüne göre kullanıcılar")
+@require_role("admin", "editor")
 def users_by_role(request, meslek_rolu: str):
     users = User.objects.select_related("profile").filter(
         profile__meslek_rolu=meslek_rolu, is_active=True

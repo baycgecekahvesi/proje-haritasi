@@ -1,8 +1,10 @@
 from typing import List, Optional
 
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
+from apps.accounts.decorators import require_role
 from .models import GorevDurumu, ProjeGorev, ReferansDoc, RoleSkill, TaskTemplate
 from .schemas import (
     EkosistemOut,
@@ -185,11 +187,13 @@ def my_tasks(request):
 
 
 @router.get("/tasks", response=List[ProjeGorevOut], summary="Tüm proje görevleri")
-def list_tasks(request):
-    return [_gorev_out(g) for g in ProjeGorev.objects.select_related("atanan").all()]
+def list_tasks(request, limit: int = 200, offset: int = 0):
+    qs = ProjeGorev.objects.select_related("atanan").all()[offset: offset + limit]
+    return [_gorev_out(g) for g in qs]
 
 
 @router.patch("/tasks/{gorev_id}", response=ProjeGorevOut, summary="Görev durumu güncelle")
+@require_role("admin", "editor")
 def update_task(request, gorev_id: str, data: ProjeGorevGuncelleIn):
     g = get_object_or_404(ProjeGorev.objects.select_related("atanan"), gorev_id=gorev_id)
     eski_durum = g.durum
@@ -232,24 +236,26 @@ def update_task(request, gorev_id: str, data: ProjeGorevGuncelleIn):
 
 
 @router.post("/tasks", response=ProjeGorevOut, summary="Yeni görev ekle")
+@require_role("admin", "editor")
 def create_task(request, data: ProjeGorevEkleIn):
     import re
-    # Auto-generate gorev_id
-    prefix = data.rol.upper()
-    existing_tasks = ProjeGorev.objects.filter(rol=prefix)
-    max_num = 0
-    for task in existing_tasks:
-        match = re.match(r"^" + re.escape(prefix) + r"-(\d+)$", task.gorev_id, re.IGNORECASE)
-        if match:
-            num = int(match.group(1))
-            if num > max_num:
-                max_num = num
-    new_id = f"{prefix}-{max_num + 1:03d}"
-
     from apps.accounts.models import User as AccountUser
+
+    prefix = data.rol.upper()
     atanan = None
     if data.atanan_id:
         atanan = AccountUser.objects.filter(id=data.atanan_id).first()
+
+    with transaction.atomic():
+        existing_tasks = ProjeGorev.objects.select_for_update().filter(rol=prefix)
+        max_num = 0
+        for task in existing_tasks:
+            match = re.match(r"^" + re.escape(prefix) + r"-(\d+)$", task.gorev_id, re.IGNORECASE)
+            if match:
+                num = int(match.group(1))
+                if num > max_num:
+                    max_num = num
+        new_id = f"{prefix}-{max_num + 1:03d}"
 
     task = ProjeGorev.objects.create(
         gorev_id=new_id,
@@ -278,6 +284,7 @@ def create_task(request, data: ProjeGorevEkleIn):
 
 
 @router.delete("/tasks/{gorev_id}", response={200: dict}, summary="Görev sil")
+@require_role("admin", "editor")
 def delete_task(request, gorev_id: str):
     task = get_object_or_404(ProjeGorev, gorev_id=gorev_id)
     task.delete()
