@@ -289,7 +289,37 @@ const App = (() => {
     if (currentTab === "map") MapView.render();
   }
 
+  // Sidebar aç/kapat
+  function _initSidebar() {
+    const sidebar  = document.getElementById("sidebar");
+    const overlay  = document.getElementById("sidebar-overlay");
+    const toggleBtn = document.getElementById("sidebar-toggle");
+    if (!sidebar || !toggleBtn) return;
+
+    let collapsed = false;
+    const mq = window.matchMedia("(max-width: 768px)");
+
+    function setCollapsed(val) {
+      collapsed = val;
+      sidebar.classList.toggle("collapsed", collapsed);
+      overlay.classList.toggle("show", !collapsed && mq.matches);
+    }
+
+    toggleBtn.addEventListener("click", () => setCollapsed(!collapsed));
+    overlay.addEventListener("click", () => setCollapsed(true));
+    mq.addEventListener("change", () => { if (!mq.matches) overlay.classList.remove("show"); });
+
+    if (mq.matches) setCollapsed(true);
+  }
+
+  // Admin grubunu göster/gizle
+  function _applyAdminVisibility() {
+    const grp = document.getElementById("sidebar-group-admin");
+    if (grp) grp.style.display = Auth.isAdmin() ? "" : "none";
+  }
+
   function bindEvents() {
+    _initSidebar();
     document.getElementById("logout-btn").onclick = () => Auth.logout();
 
     document.querySelectorAll(".tab").forEach((t) => {
@@ -395,6 +425,7 @@ const App = (() => {
     bindEvents();
     const ok = await Auth.init();
     if (ok) {
+      _applyAdminVisibility();
       refreshStats();
       switchTab("map");
       showRecentProjects();

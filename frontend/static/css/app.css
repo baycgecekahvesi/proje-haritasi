@@ -86,21 +86,54 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #c7d2fe; border-c
 .topbar {
   display: flex; align-items: center; justify-content: space-between;
   background: var(--surface);
-  padding: 0 20px;
-  height: 58px;
+  padding: 0 16px;
+  height: 54px;
   border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 50;
+  position: sticky; top: 0; z-index: 100;
 }
-.topbar-left { display: flex; align-items: center; gap: 8px; font-size: 16px; }
-.tabs { display: flex; gap: 4px; }
+.topbar-left { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.user-chip { font-weight: 600; font-size: 13px; color: var(--muted); }
+.sidebar-toggle-btn { font-size: 17px; padding: 6px 10px; }
+
+/* ---------- App body ---------- */
+.app-body { display: flex; height: calc(100vh - 54px); overflow: hidden; }
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow-y: auto;
+  transition: transform .22s ease; z-index: 90;
+}
+.sidebar.collapsed { transform: translateX(-220px); position: absolute; height: calc(100vh - 54px); }
+.sidebar-nav { padding: 10px 8px 24px; display: flex; flex-direction: column; gap: 2px; }
+.sidebar-group { margin-top: 8px; }
+.sidebar-group-label {
+  display: block; font-size: 10px; font-weight: 800; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--muted); padding: 6px 12px 4px;
+}
 .tab {
-  border: none; background: transparent; padding: 8px 14px; border-radius: 8px;
-  font: inherit; font-weight: 600; color: var(--muted); cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; border: none; background: transparent;
+  padding: 8px 12px; border-radius: 8px;
+  font: inherit; font-size: 13px; font-weight: 600;
+  color: var(--muted); cursor: pointer; text-align: left;
+  transition: background .12s, color .12s; white-space: nowrap;
 }
 .tab:hover { background: #f1f4fb; color: var(--text); }
 .tab.active { background: #eaf0ff; color: var(--primary); }
-.topbar-right { display: flex; align-items: center; gap: 10px; }
-.user-chip { font-weight: 600; font-size: 13px; color: var(--muted); }
+.tab.active::before {
+  content: ""; display: block; width: 3px; height: 16px;
+  background: var(--primary); border-radius: 2px; margin-right: 2px; flex-shrink: 0;
+}
+
+/* Overlay (mobil) */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 89; }
+.sidebar-overlay.show { display: block; }
+
+/* ---------- Main wrap ---------- */
+.main-wrap { flex: 1; overflow-y: auto; min-width: 0; }
 
 /* ---------- Stat bar ---------- */
 .stat-bar {
