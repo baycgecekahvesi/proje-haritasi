@@ -17,6 +17,7 @@ from apps.reports.api import router as reports_router
 from apps.skills.api import router as skills_router
 from apps.risks.api import router as risks_router
 from apps.punchlist.api import router as punch_router
+from apps.iolist.api import router as io_router
 
 api = NinjaAPI(
     title="ProjeHaritasi API",
@@ -37,6 +38,7 @@ api.add_router("/skills", skills_router, tags=["Skill Ekosistemi"])
 api.add_router("/agents", agents_router, tags=["Ajanlar"])
 api.add_router("/risks", risks_router, tags=["Risk Yonetimi"])
 api.add_router("/punch", punch_router, tags=["Punch List"])
+api.add_router("/io", io_router, tags=["IO Listesi"])
 
 
 @api.exception_handler(AuthenticationError)

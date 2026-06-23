@@ -282,6 +282,7 @@ const App = (() => {
     if (tab === "glossary")    Glossary.load();
     if (tab === "risks")       Risks.load();
     if (tab === "punchlist")   PunchList.load();
+    if (tab === "iolist")      IOList.load();
     if (tab === "users")    Users.render();
   }
 

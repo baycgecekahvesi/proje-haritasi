@@ -1671,3 +1671,16 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   margin-bottom: 8px;
 }
 .pl-grup-title { font-weight: 700; font-size: 14px; }
+
+/* =============================== I/O LİSTESİ =============================== */
+
+.io-layout  { padding: 0; }
+.io-ozet-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.io-tablo { min-width: 1100px; }
+.io-tag {
+  display: inline-block;
+  font-family: "Courier New", monospace;
+  font-size: 12px; font-weight: 700;
+  padding: 2px 8px; border-radius: 5px;
+  white-space: nowrap;
+}
