@@ -45,6 +45,7 @@ const GorevTakip = (() => {
   }
 
   function hesaplaKritikYol() {
+    if (!gorevler.length) { kritikYolSet = new Set(); return; }
     const gecikme = {};
     gorevler.forEach(g => { gecikme[g.gorev_id] = g.baslangic_gun + g.gun; });
     const maxBitis = Math.max(...Object.values(gecikme));
@@ -65,7 +66,7 @@ const GorevTakip = (() => {
     const panel = document.getElementById("panel-tasks");
     if (!panel) return;
     try {
-      gorevler = await API.get("/skills/tasks");
+      gorevler = await API.get("/skills/tasks?limit=200&offset=0");
       hesaplaKritikYol();
       render();
     } catch (err) {
@@ -160,11 +161,13 @@ const GorevTakip = (() => {
         if (g) openDetail(g);
       }));
 
-    body.querySelectorAll("[data-dot-id]").forEach(el =>
-      el.addEventListener("click", e => {
-        e.stopPropagation();
-        updateTask(el.dataset.dotId, { durum: el.dataset.durum });
-      }));
+    if (Auth.isEditor()) {
+      body.querySelectorAll("[data-dot-id]").forEach(el =>
+        el.addEventListener("click", e => {
+          e.stopPropagation();
+          updateTask(el.dataset.dotId, { durum: el.dataset.durum });
+        }));
+    }
   }
 
   // --- Kanban ---
@@ -205,13 +208,13 @@ const GorevTakip = (() => {
         ${g.tamamlanma > 0 ? `<div class="tk-mini-bar"><div style="width:${g.tamamlanma}%;background:${r}"></div></div>` : ""}
         <div class="tk-kart-footer">
           ${avatar}
-          <div class="tk-dots">
+          ${Auth.isEditor() ? `<div class="tk-dots">
             ${DURUMLAR.map(dd => `
               <button class="tk-dot${g.durum===dd.id?" active":""}" data-dot-id="${UI.esc(g.gorev_id)}" data-durum="${dd.id}"
                 title="Durum: ${dd.id}"
                 style="--d-color:${dd.renk}; background:${g.durum===dd.id?dd.renk:"transparent"}; border-color:${g.durum===dd.id?dd.renk:"var(--border)"}">
               </button>`).join("")}
-          </div>
+          </div>` : `<span style="font-size:10px;color:${durumRenk(g.durum)};font-weight:600">${UI.esc(g.durum)}</span>`}
         </div>
       </div>`;
   }
@@ -219,7 +222,7 @@ const GorevTakip = (() => {
   // --- Gantt ---
   function ganttHtml(filtreli) {
     const HC = 18, ROL_W = 200;
-    const maxGun = Math.max(...gorevler.map(g => g.baslangic_gun + g.gun));
+    const maxGun = filtreli.length ? Math.max(...filtreli.map(g => g.baslangic_gun + g.gun)) : 10;
     const haftalar = Math.ceil(maxGun / 5);
 
     const gruplar = {};
@@ -320,6 +323,7 @@ const GorevTakip = (() => {
   // --- Detay modal ---
   function openDetail(g) {
     secilenGorev = { ...g };
+    const editor = Auth.isEditor();
     const r = rolRenk(g.rol);
     const rol = ROLLER.find(x => x.id === g.rol);
     const bs = g.baslangic_gun;
@@ -352,7 +356,7 @@ const GorevTakip = (() => {
 
         <div style="margin-bottom:12px">
           <div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:8px">DURUM</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px" id="tk-durum-btns">
+          ${editor ? `<div style="display:flex;flex-wrap:wrap;gap:6px" id="tk-durum-btns">
             ${DURUMLAR.map(d => `
               <button class="tk-det-durum" data-durum="${d.id}"
                 style="padding:4px 12px;border-radius:20px;border:1px solid ${secilenGorev.durum===d.id?d.renk:"var(--border)"};
@@ -360,7 +364,7 @@ const GorevTakip = (() => {
                   color:${secilenGorev.durum===d.id?d.renk:"var(--muted)"};cursor:pointer;font-size:11px;font-weight:600">
                 ${d.id}
               </button>`).join("")}
-          </div>
+          </div>` : `<span style="font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid ${durumRenk(g.durum)}44;color:${durumRenk(g.durum)};font-weight:600">${UI.esc(g.durum)}</span>`}
         </div>
 
         <div style="margin-bottom:12px">
@@ -368,7 +372,7 @@ const GorevTakip = (() => {
             <div style="font-size:10px;color:var(--muted);font-weight:700">TAMAMLANMA</div>
             <div id="tk-pct-lbl" style="font-size:11px;color:${r};font-weight:700">${g.tamamlanma}%</div>
           </div>
-          <input type="range" id="tk-pct" min="0" max="100" step="5" value="${g.tamamlanma}" style="width:100%;accent-color:${r}" />
+          ${editor ? `<input type="range" id="tk-pct" min="0" max="100" step="5" value="${g.tamamlanma}" style="width:100%;accent-color:${r}" />` : ""}
           <div style="height:6px;background:var(--border);border-radius:3px;margin-top:6px">
             <div id="tk-pct-bar" style="height:100%;width:${g.tamamlanma}%;background:linear-gradient(90deg,${r},${r}88);border-radius:3px;transition:width .3s"></div>
           </div>
@@ -376,8 +380,10 @@ const GorevTakip = (() => {
 
         <div style="margin-bottom:12px">
           <div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:8px">NOT / ENGEL</div>
-          <textarea id="tk-not" rows="3" placeholder="Görev notu veya engel açıklaması…"
-            style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-size:12px;resize:vertical;outline:none;font-family:inherit;box-sizing:border-box">${UI.esc(g.not_metni||"")}</textarea>
+          ${editor
+            ? `<textarea id="tk-not" rows="3" placeholder="Görev notu veya engel açıklaması…"
+                style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-size:12px;resize:vertical;outline:none;font-family:inherit;box-sizing:border-box">${UI.esc(g.not_metni||"")}</textarea>`
+            : `<p style="font-size:12px;color:var(--muted);padding:8px 0">${UI.esc(g.not_metni||"—")}</p>`}
         </div>
 
         ${g.atanan_adi ? `
@@ -407,41 +413,40 @@ const GorevTakip = (() => {
             }).join("")}
           </div>` : ""}
 
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;border-top:1px solid var(--border);padding-top:12px">
-          <div>
-            <button id="tk-sil" class="btn btn-danger btn-sm">Görev Sil</button>
-          </div>
-          <div>
-            <button id="tk-kaydet" class="btn btn-primary">Kaydet</button>
-          </div>
-        </div>
+        ${editor ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;border-top:1px solid var(--border);padding-top:12px">
+          <div><button id="tk-sil" class="btn btn-danger btn-sm">Görev Sil</button></div>
+          <div><button id="tk-kaydet" class="btn btn-primary">Kaydet</button></div>
+        </div>` : ""}
       </div>`);
 
     document.querySelector(".modal").style.maxWidth = "460px";
 
-    // Range live
-    const rng = document.getElementById("tk-pct");
-    rng.oninput = () => {
-      document.getElementById("tk-pct-lbl").textContent = rng.value + "%";
-      document.getElementById("tk-pct-bar").style.width = rng.value + "%";
-    };
-
-    // Durum butonları
-    document.querySelectorAll(".tk-det-durum").forEach(btn => {
-      btn.onclick = () => {
-        secilenGorev.durum = btn.dataset.durum;
-        document.querySelectorAll(".tk-det-durum").forEach(b => {
-          const d = DURUMLAR.find(x => x.id === b.dataset.durum);
-          const sel = b.dataset.durum === secilenGorev.durum;
-          b.style.borderColor = sel ? d.renk : "#1E2433";
-          b.style.background  = sel ? d.renk + "22" : "transparent";
-          b.style.color       = sel ? d.renk : "#64748B";
-        });
+    // Range live (sadece editor)
+    if (editor) {
+      const rng = document.getElementById("tk-pct");
+      if (rng) rng.oninput = () => {
+        document.getElementById("tk-pct-lbl").textContent = rng.value + "%";
+        document.getElementById("tk-pct-bar").style.width = rng.value + "%";
       };
-    });
 
-    // Sil
-    document.getElementById("tk-sil").onclick = () => {
+      // Durum butonları
+      document.querySelectorAll(".tk-det-durum").forEach(btn => {
+        btn.onclick = () => {
+          secilenGorev.durum = btn.dataset.durum;
+          document.querySelectorAll(".tk-det-durum").forEach(b => {
+            const d = DURUMLAR.find(x => x.id === b.dataset.durum);
+            const sel = b.dataset.durum === secilenGorev.durum;
+            b.style.borderColor = sel ? d.renk : "#1E2433";
+            b.style.background  = sel ? d.renk + "22" : "transparent";
+            b.style.color       = sel ? d.renk : "#64748B";
+          });
+        };
+      });
+    }
+
+    // Sil (editor korumalı)
+    const silBtn = document.getElementById("tk-sil");
+    if (silBtn) silBtn.onclick = () => {
       const silDiv = document.getElementById("tk-sil-onay");
       if (silDiv) { silDiv.remove(); return; }
       const onay = document.createElement("div");
@@ -469,15 +474,19 @@ const GorevTakip = (() => {
       };
     };
 
-    // Kaydet
-    document.getElementById("tk-kaydet").onclick = async () => {
-      const payload = {
-        durum: secilenGorev.durum,
-        tamamlanma: parseInt(document.getElementById("tk-pct").value),
-        not_metni: document.getElementById("tk-not").value,
-      };
-      await updateTask(g.gorev_id, payload);
-      UI.closeModal();
+    // Kaydet (editor korumalı)
+    const kaydetBtn = document.getElementById("tk-kaydet");
+    if (kaydetBtn) kaydetBtn.onclick = async () => {
+      try {
+        const payload = {
+          durum: secilenGorev.durum,
+          tamamlanma: parseInt(document.getElementById("tk-pct").value),
+          not_metni: document.getElementById("tk-not").value,
+        };
+        await updateTask(g.gorev_id, payload);
+        document.querySelector(".modal").style.maxWidth = "";
+        UI.closeModal();
+      } catch { /* updateTask içinde toast gösteriliyor */ }
     };
 
     document.getElementById("modal-close").addEventListener("click", () => {

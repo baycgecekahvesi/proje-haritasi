@@ -34,11 +34,16 @@ const Projects = (() => {
     }
     if (opts.resetPage) page = 1;
 
-    const data = await API.get(`/projects/?${buildQuery()}`);
-    const items = data.items || data;
-    totalCount = data.count != null ? data.count : items.length;
-    renderCards(items, document.getElementById("projects-list"));
-    renderPager();
+    try {
+      const data = await API.get(`/projects/?${buildQuery()}`);
+      const items = data.items || data;
+      totalCount = data.count != null ? data.count : items.length;
+      renderCards(items, document.getElementById("projects-list"));
+      renderPager();
+    } catch (err) {
+      document.getElementById("projects-list").innerHTML =
+        `<p class="muted" style="padding:24px">Projeler yüklenemedi: ${UI.esc(err.message)}</p>`;
+    }
   }
 
   function renderCards(items, container) {
