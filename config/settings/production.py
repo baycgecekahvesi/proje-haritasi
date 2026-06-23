@@ -1,10 +1,19 @@
-"""Üretim ayarları — ileride kullanım için iskelet."""
+"""Üretim ayarları — Railway + PostgreSQL."""
+import dj_database_url
+from decouple import config
+
 from .base import *  # noqa: F401,F403
 
 DEBUG = False
 
-# Üretimde PostgreSQL zorunlu
-USE_SQLITE = False
+# Railway DATABASE_URL'yi otomatik inject eder
+DATABASES = {
+    "default": dj_database_url.config(
+        default=config("DATABASE_URL", default=""),
+        conn_max_age=600,
+        ssl_require=True,
+    )
+}
 
 # Güvenlik
 SECURE_SSL_REDIRECT = True
