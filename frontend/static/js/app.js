@@ -281,6 +281,7 @@ const App = (() => {
     if (tab === "flow")        ProjectFlow.load();
     if (tab === "glossary")    Glossary.load();
     if (tab === "risks")       Risks.load();
+    if (tab === "punchlist")   PunchList.load();
     if (tab === "users")    Users.render();
   }
 

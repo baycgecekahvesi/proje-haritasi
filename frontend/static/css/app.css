@@ -1635,3 +1635,39 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #c7d2fe; border-c
 
 /* Form slider */
 input[type=range] { width: 100%; accent-color: var(--primary); }
+
+/* =============================== PUNCH LIST (FAT/SAT) =============================== */
+
+.pl-layout { padding: 0; }
+.pl-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.pl-title { font-size: 20px; font-weight: 700; margin: 0; }
+.pl-sub   { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+.pl-header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pl-ozet-chips   { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.pl-tur-tabs {
+  display: flex; gap: 4px; padding: 12px 24px;
+  border-bottom: 1px solid var(--border); flex-wrap: wrap;
+}
+.pl-ttab {
+  padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px;
+  background: var(--surface); font-size: 13px; cursor: pointer; transition: all .15s;
+}
+.pl-ttab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.pl-filter-bar {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 10px 24px; background: var(--bg); border-bottom: 1px solid var(--border);
+}
+
+.pl-grup { margin-bottom: 24px; }
+.pl-grup-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: var(--bg); border-radius: 8px;
+  margin-bottom: 8px;
+}
+.pl-grup-title { font-weight: 700; font-size: 14px; }
