@@ -9,3 +9,5 @@ gunicorn==22.0.0
 pytest==8.2.0
 pytest-django==4.8.0
 pytest-factoryboy==2.7.0
+whitenoise==6.7.0
+
