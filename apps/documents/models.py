@@ -138,3 +138,66 @@ class TechnicalDocument(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class EplanDokuman(models.Model):
+    class DokumanTipi(models.TextChoices):
+        SEMA          = "sema",          "Elektrik Şeması"
+        PANEL_LAYOUT  = "panel_layout",  "Panel Layout"
+        KABLO_LISTESI = "kablo_listesi", "Kablo Listesi"
+        BOM           = "bom",           "BOM (Malzeme Listesi)"
+        AS_BUILT      = "as_built",      "As-Built Şema"
+        DIGER         = "diger",         "Diğer"
+
+    class OnayDurumu(models.TextChoices):
+        TASLAK           = "taslak",           "Taslak"
+        IC_KONTROL       = "ic_kontrol",       "İç Kontrol"
+        MUSTERI_INCELEME = "musteri_inceleme", "Müşteri İncelemesinde"
+        ONAYLANDI        = "onaylandi",        "Onaylandı"
+        AS_BUILT         = "as_built",         "As-Built"
+        IPTAL            = "iptal",            "İptal"
+
+    seri_no       = models.CharField(max_length=50)
+    baslik        = models.CharField(max_length=255)
+    proje         = models.ForeignKey(
+        "projects.Project", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="eplan_dokumanlar"
+    )
+    dokuman_tipi  = models.CharField(max_length=30, choices=DokumanTipi.choices, default=DokumanTipi.SEMA)
+    revizyon_no   = models.CharField(max_length=20, default="Rev.0")
+    onay_durumu   = models.CharField(max_length=30, choices=OnayDurumu.choices, default=OnayDurumu.TASLAK)
+    aciklama      = models.TextField(blank=True)
+    notlar        = models.TextField(blank=True)
+    dosya         = models.FileField(upload_to="eplan/%Y/%m/", null=True, blank=True)
+    yukleyen      = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, related_name="eplan_dokumanlar"
+    )
+    onaylayan     = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="eplan_onaylari"
+    )
+    onay_tarihi       = models.DateField(null=True, blank=True)
+    yukleme_tarihi    = models.DateTimeField(auto_now_add=True)
+    guncelleme_tarihi = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "E-Plan Döküman"
+        verbose_name_plural = "E-Plan Dökümanlar"
+        ordering = ["seri_no", "-yukleme_tarihi"]
+        unique_together = [["seri_no", "revizyon_no"]]
+
+    @property
+    def file_extension(self) -> str:
+        if not self.dosya:
+            return ""
+        _, ext = os.path.splitext(self.dosya.name)
+        return ext.lower()
+
+    @property
+    def file_size_kb(self) -> float:
+        try:
+            return round(self.dosya.size / 1024, 1)
+        except Exception:
+            return 0
+
+    def __str__(self):
+        return f"{self.seri_no} {self.baslik} ({self.revizyon_no})"

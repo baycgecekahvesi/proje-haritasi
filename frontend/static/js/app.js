@@ -277,6 +277,7 @@ const App = (() => {
     if (tab === "tasks")    GorevTakip.load();
     if (tab === "calculations") Calculations.load();
     if (tab === "costanalysis") CostAnalysis.load();
+    if (tab === "eplan")       Eplan.load();
     if (tab === "flow")        ProjectFlow.load();
     if (tab === "glossary")    Glossary.load();
     if (tab === "users")    Users.render();
