@@ -16,6 +16,15 @@ python manage.py seed_skills || echo "UYARI: seed_skills başarısız, devam edi
 echo "=== Seed: teknik dökümanlar ==="
 python manage.py seed_docs || echo "UYARI: seed_docs başarısız, devam ediliyor"
 
+echo "=== Seed: risk verileri ==="
+python manage.py seed_risks || echo "UYARI: seed_risks başarısız, devam ediliyor"
+
+echo "=== Seed: punch list ==="
+python manage.py seed_punchlist || echo "UYARI: seed_punchlist başarısız, devam ediliyor"
+
+echo "=== Seed: I/O listesi ==="
+python manage.py seed_iolist || echo "UYARI: seed_iolist başarısız, devam ediliyor"
+
 echo "=== Gunicorn başlatılıyor ==="
 exec gunicorn config.wsgi:application \
   --bind "0.0.0.0:${PORT:-8000}" \
