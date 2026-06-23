@@ -1,0 +1,61 @@
+# ProjeHaritası — agent-hub project profile
+# Her ajan bu dosyayı okuyarak projeye özgü davranır.
+
+project:
+  name: "ProjeHaritası"
+  type: "fullstack"
+  description: >
+    Türkiye geneli endüstriyel otomasyon & MES projelerini takip eden web uygulaması.
+    İl bazlı harita görünümü, proje/bütçe/döküman/görev yönetimi, skill ekosistemi,
+    mühendislik hesaplamaları ve yönetim raporlaması sunar.
+
+stack:
+  language: "Python 3.12 (backend) + Vanilla JavaScript (frontend)"
+  runtime: "Python 3.12"
+  framework: "Django 5.0 + django-ninja 1.3 (REST API) — framework/library yok, saf JS"
+  database: "PostgreSQL (üretim) / SQLite (geliştirme)"
+  packageManager: "pip"
+
+commands:
+  install: "pip install -r requirements.txt"
+  dev: "python manage.py runserver --settings=config.settings.local"
+  test: "pytest"
+  lint: ""
+  build: "python manage.py collectstatic --noinput"
+  migrate: "python manage.py migrate"
+  seed: "python manage.py seed_demo && python manage.py seed_skills && python manage.py seed_docs"
+
+team:
+  active:
+    - tech-lead
+    - backend-engineer
+    - frontend-engineer
+    - otomasyon-engineer
+    - code-reviewer
+    - qa-tester
+    - security-reviewer
+    - architect
+
+stack_details:
+  api: "django-ninja Router; tüm endpoint'ler /api/ altında; JWT auth (PyJWT + AuthBearer)"
+  frontend: >
+    Saf HTML/CSS/JS — framework yok. Her modül kendi IIFE modülü (Projects, Reports, vb.).
+    Chart.js grafik, SVG Türkiye haritası. Tüm API çağrıları api.js içindeki API.get/post ile yapılır.
+  auth: "JWT token; roles: admin / editor / viewer; meslek_rolu: ELK/PLC/SCADA/SAHA/PM"
+  settings: "config/settings/base.py + local.py + production.py; python-decouple ile .env"
+  deploy: "Railway (PostgreSQL + gunicorn); start.sh migrate→seed→collectstatic→gunicorn"
+
+conventions:
+  - "API schema'ları apps/<app>/schemas.py içinde Ninja Schema olarak tanımla"
+  - "İş mantığı apps/<app>/services.py içinde; api.py sadece routing yapar"
+  - "Frontend'de yeni modüller için ayrı IIFE dosyası oluştur, app.js'e switchTab kaydını ekle"
+  - "N+1 sorgulardan kaçın; aggregate ve select_related kullan"
+  - "Seed komutları idempotent olmalı (varsa güncelle, yoksa oluştur)"
+  - "Türkçe UI metni; kod ve yorum İngilizce veya Türkçe (tutarlı kal)"
+
+doNot:
+  - "React/Vue/Angular veya herhangi bir JS framework ekleme — saf JS kullanılır"
+  - "SECRET_KEY veya DB şifrelerini kaynak koduna yazma"
+  - "Model değişikliği olmadan migration üretme (makemigrations çalıştır)"
+  - "api.py içinde doğrudan ORM sorgusu yazma — services.py'e taşı"
+  - "db.sqlite3 veya .env dosyasını commit etme"
