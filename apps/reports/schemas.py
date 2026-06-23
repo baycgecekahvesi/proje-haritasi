@@ -63,3 +63,28 @@ class GanttItemOut(Schema):
     actual_start: Optional[date]
     actual_end: Optional[date]
     is_delayed: bool
+
+
+class ProgressBucketOut(Schema):
+    label: str
+    count: int
+
+
+class MonthlyActivityOut(Schema):
+    month: str
+    started: int
+    completed: int
+
+
+class BudgetByProvinceOut(Schema):
+    province: str
+    planned: Decimal
+    spent: Decimal
+    usage_pct: float
+
+
+class StatusDistOut(Schema):
+    status: str
+    label: str
+    count: int
+    pct: float

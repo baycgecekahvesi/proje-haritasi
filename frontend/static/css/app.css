@@ -817,6 +817,158 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #c7d2fe; border-c
   .calc-layout { grid-template-columns: 1fr; }
 }
 
+/* ===================== RAPORLAR YENİ ===================== */
+.rp-layout { display: flex; flex-direction: column; gap: 0; height: 100%; }
+
+.rp-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+.rp-tab {
+  padding: 10px 18px;
+  border: none;
+  background: none;
+  font: 600 13px 'Inter', sans-serif;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all .15s;
+}
+.rp-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.rp-tab:hover:not(.active) { color: var(--text); background: var(--bg); border-radius: 8px 8px 0 0; }
+
+.rp-body { flex: 1; }
+
+.rp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.rp-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+.rp-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
+.rp-card.wide { grid-column: 1 / -1; }
+
+.rp-chart-wrap { position: relative; }
+.rp-chart-wrap.tall { height: 280px; }
+
+.rp-kpi-list { display: flex; flex-direction: column; gap: 0; }
+.rp-kpi-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+.rp-kpi-row.accent-red   strong { color: #e74c3c; }
+.rp-kpi-row.accent-green strong { color: #27ae60; }
+.rp-kpi-row strong { font-weight: 700; }
+
+.rp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.rp-table th {
+  background: var(--bg);
+  padding: 8px 12px;
+  text-align: left;
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--muted);
+}
+.rp-table td { padding: 8px 12px; border: 1px solid var(--border); }
+.rp-table tr:hover td { background: #f8faff; }
+.rp-table tr:nth-child(even) td { background: #fafbff; }
+
+.rp-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.rp-badge.danger  { background: #fde8e8; color: #c0392b; }
+.rp-badge.success { background: #d4edda; color: #1a7a3a; }
+.rp-badge.warning { background: #fef7e0; color: #b06000; }
+
+.rp-prog-wrap {
+  flex: 1;
+  height: 7px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.rp-prog-bar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+  transition: width .3s;
+}
+
+.gantt-today {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: #e74c3c;
+  z-index: 5;
+  pointer-events: none;
+}
+.gantt-actual {
+  position: absolute;
+  height: 4px;
+  bottom: 0;
+  background: rgba(0,0,0,.25);
+  border-radius: 2px;
+}
+.gantt-pct {
+  width: 36px;
+  text-align: right;
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.gantt-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 36px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.rp-gantt-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.rp-gantt-legend i {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+@media (max-width: 900px) {
+  .rp-grid { grid-template-columns: 1fr; }
+  .rp-card.wide { grid-column: 1; }
+}
+
 /* ===================== MALİYET ANALİZİ ===================== */
 .ca-layout {
   display: grid;

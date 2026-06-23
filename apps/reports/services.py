@@ -1,11 +1,11 @@
 """
 Raporlama hesaplama mantığı — N+1 sorgudan kaçınmak için aggregate kullanır.
 """
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.db.models import Avg, Count, DecimalField, F, Q, Sum
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncMonth
 
 from apps.budget.models import Budget
 from apps.projects.models import Project, ProjectStatus
@@ -134,6 +134,119 @@ def gantt() -> list[dict]:
             "is_delayed": p.is_delayed,
         }
         for p in projects
+    ]
+
+
+def progress_buckets() -> list[dict]:
+    """Projeleri ilerleme yüzdesine göre gruplar: 0-25, 25-50, 50-75, 75-99, 100."""
+    buckets = [
+        {"label": "0–25%",   "min": 0,   "max": 25},
+        {"label": "25–50%",  "min": 25,  "max": 50},
+        {"label": "50–75%",  "min": 50,  "max": 75},
+        {"label": "75–99%",  "min": 75,  "max": 99},
+        {"label": "Tamamlandı", "min": 100, "max": 100},
+    ]
+    result = []
+    for b in buckets:
+        if b["min"] == b["max"]:
+            count = Project.objects.filter(progress=100).count()
+        else:
+            count = Project.objects.filter(
+                progress__gte=b["min"], progress__lt=b["max"] + 1
+            ).count()
+        result.append({"label": b["label"], "count": count})
+    return result
+
+
+def monthly_activity() -> list[dict]:
+    """Son 12 ayın başlangıç ve tamamlanma proje sayıları."""
+    today = date.today()
+    twelve_months_ago = today.replace(day=1) - timedelta(days=365)
+
+    started = (
+        Project.objects.filter(actual_start__gte=twelve_months_ago)
+        .annotate(month=TruncMonth("actual_start"))
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by("month")
+    )
+    completed = (
+        Project.objects.filter(
+            actual_end__gte=twelve_months_ago,
+            status=ProjectStatus.COMPLETED,
+        )
+        .annotate(month=TruncMonth("actual_end"))
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by("month")
+    )
+
+    started_map  = {r["month"].strftime("%Y-%m"): r["count"] for r in started}
+    completed_map = {r["month"].strftime("%Y-%m"): r["count"] for r in completed}
+
+    months = []
+    cur = twelve_months_ago
+    while cur <= today:
+        key = cur.strftime("%Y-%m")
+        months.append({
+            "month": key,
+            "started": started_map.get(key, 0),
+            "completed": completed_map.get(key, 0),
+        })
+        # Sonraki ay
+        if cur.month == 12:
+            cur = cur.replace(year=cur.year + 1, month=1)
+        else:
+            cur = cur.replace(month=cur.month + 1)
+    return months
+
+
+def budget_by_province() -> list[dict]:
+    """İl bazlı toplam planlanan ve harcanan bütçe."""
+    money = DecimalField(max_digits=18, decimal_places=2)
+    rows = (
+        Budget.objects.select_related("project")
+        .values("project__province")
+        .annotate(
+            planned=Coalesce(Sum("planned_amount"), Decimal("0"), output_field=money),
+            spent=Coalesce(Sum("expenses__amount"), Decimal("0"), output_field=money),
+        )
+        .order_by("-planned")
+    )
+    return [
+        {
+            "province": r["project__province"],
+            "planned": r["planned"],
+            "spent": r["spent"],
+            "usage_pct": round(float(r["spent"]) / float(r["planned"]) * 100, 1)
+            if r["planned"] else 0,
+        }
+        for r in rows
+    ]
+
+
+def status_distribution() -> list[dict]:
+    """Durum bazlı proje sayısı ve yüzdesi."""
+    total = Project.objects.count() or 1
+    rows = (
+        Project.objects.values("status")
+        .annotate(count=Count("id"))
+        .order_by("-count")
+    )
+    labels = {
+        ProjectStatus.ACTIVE:    "Aktif",
+        ProjectStatus.PENDING:   "Beklemede",
+        ProjectStatus.COMPLETED: "Tamamlandı",
+        ProjectStatus.CANCELLED: "İptal",
+    }
+    return [
+        {
+            "status": r["status"],
+            "label": labels.get(r["status"], r["status"]),
+            "count": r["count"],
+            "pct": round(r["count"] / total * 100, 1),
+        }
+        for r in rows
     ]
 
 
