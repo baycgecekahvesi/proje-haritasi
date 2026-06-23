@@ -949,6 +949,27 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #c7d2fe; border-c
 .pf-sum-fill { width: 100%; min-height: 2px; border-radius: 4px 4px 0 0; transition: height .4s; background: var(--primary); }
 .pf-sum-lbl { font-size: 10px; color: var(--muted); font-weight: 700; margin-top: 4px; }
 
+/* Sekme geçiş butonları (Proje Akışı | E-Plan Kontrol) */
+.pf-view-tabs { display: flex; gap: 6px; }
+.pf-vtab { padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--muted); transition: all .15s; }
+.pf-vtab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.pf-vtab:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+
+/* E-Plan kontrol kartları — grid layout */
+.ep-kl-bilgi { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; background: var(--surface); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.ep-kl-baslik { font-size: 16px; font-weight: 800; margin: 0 0 4px; }
+.ep-kl-sub { font-size: 12px; color: var(--muted); margin: 0; max-width: 480px; }
+.ep-kl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 14px; }
+.ep-kl-kart { background: var(--surface); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); border-left: 4px solid var(--faz-renk, var(--border)); }
+.ep-kl-kart.pf-done { background: color-mix(in srgb, var(--faz-renk) 5%, var(--surface)); }
+.ep-kl-kart.pf-active { box-shadow: 0 4px 18px color-mix(in srgb, var(--faz-renk) 18%, transparent); }
+.ep-kl-kart-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 2px; }
+
+/* Özet satırı */
+.ep-kl-ozet { display: flex; flex-direction: column; gap: 6px; background: var(--surface); border-radius: var(--radius); padding: 14px 18px; box-shadow: var(--shadow); margin-top: 14px; }
+.ep-kl-ozet-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.ep-kl-ozet-bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+
 /* ===================== KISALTMALAR ===================== */
 .gl-layout { display: flex; flex-direction: column; gap: 16px; }
 
