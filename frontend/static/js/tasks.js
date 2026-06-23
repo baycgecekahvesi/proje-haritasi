@@ -187,6 +187,13 @@ const GorevTakip = (() => {
   function kartHtml(g) {
     const r = rolRenk(g.rol);
     const rol = ROLLER.find(x => x.id === g.rol);
+    
+    // Atanan kişi avatarı
+    const initials = g.atanan_adi ? g.atanan_adi.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "";
+    const avatar = initials 
+      ? `<span class="tk-avatar" title="Atanan: ${UI.esc(g.atanan_adi)}">${initials}</span>` 
+      : `<span class="tk-avatar empty" title="Atama Yok">👤</span>`;
+
     return `
       <div class="tk-kart" data-gid="${UI.esc(g.gorev_id)}" style="border-left:3px solid ${r}">
         <div class="tk-kart-top">
@@ -196,12 +203,15 @@ const GorevTakip = (() => {
         <div class="tk-kadi">${UI.esc(g.gorev_adi)}</div>
         <div class="tk-kmeta"><span>${rol?.ikon || ""} ${UI.esc(g.faz)}</span><span>${g.gun}g</span></div>
         ${g.tamamlanma > 0 ? `<div class="tk-mini-bar"><div style="width:${g.tamamlanma}%;background:${r}"></div></div>` : ""}
-        <div class="tk-dots">
-          ${DURUMLAR.map(dd => `
-            <button class="tk-dot${g.durum===dd.id?" active":""}" data-dot-id="${UI.esc(g.gorev_id)}" data-durum="${dd.id}"
-              title="${dd.id}"
-              style="background:${g.durum===dd.id?dd.renk:"transparent"};border-color:${g.durum===dd.id?dd.renk:"#2D3748"}">
-            </button>`).join("")}
+        <div class="tk-kart-footer">
+          ${avatar}
+          <div class="tk-dots">
+            ${DURUMLAR.map(dd => `
+              <button class="tk-dot${g.durum===dd.id?" active":""}" data-dot-id="${UI.esc(g.gorev_id)}" data-durum="${dd.id}"
+                title="Durum: ${dd.id}"
+                style="--d-color:${dd.renk}; background:${g.durum===dd.id?dd.renk:"transparent"}; border-color:${g.durum===dd.id?dd.renk:"var(--border)"}">
+              </button>`).join("")}
+          </div>
         </div>
       </div>`;
   }
