@@ -276,6 +276,7 @@ const App = (() => {
     if (tab === "skills")   Skills.load();
     if (tab === "tasks")    GorevTakip.load();
     if (tab === "calculations") Calculations.load();
+    if (tab === "costanalysis") CostAnalysis.load();
     if (tab === "users")    Users.render();
   }
 
