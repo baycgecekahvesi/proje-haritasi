@@ -275,6 +275,7 @@ const App = (() => {
     if (tab === "specs")    Specs.load();
     if (tab === "skills")   Skills.load();
     if (tab === "tasks")    GorevTakip.load();
+    if (tab === "calculations") Calculations.load();
     if (tab === "users")    Users.render();
   }
 

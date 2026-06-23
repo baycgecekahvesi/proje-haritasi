@@ -47,6 +47,7 @@
         <button class="tab" data-tab="specs">📋 Teknik Şartnameler</button>
         <button class="tab" data-tab="skills">🧠 Skill Ekosistemi</button>
         <button class="tab" data-tab="tasks">⚙️ Görev Takip</button>
+        <button class="tab" data-tab="calculations">📐 Hesaplamalar</button>
         <button class="tab" data-tab="users" id="tab-users" hidden>👤 Kullanıcılar</button>
       </nav>
       <div class="topbar-right">
@@ -219,6 +220,16 @@
         <div id="tasks-panel-body" class="tk-body"></div>
       </section>
 
+      <!-- ---------- HESAPLAMALAR SEKMESİ ---------- -->
+      <section id="panel-calculations" class="panel">
+        <div class="panel-head"><h2>Mühendislik Hesaplamaları</h2></div>
+        <div class="calc-tab-nav">
+          <button class="calc-tab-btn active" data-calc-tab="cable">⚡ Kablo Gerilim Düşümü</button>
+          <button class="calc-tab-btn" data-calc-tab="motor">⚙️ Motor Güç &amp; Tork</button>
+        </div>
+        <div id="calculations-container"></div>
+      </section>
+
       <!-- ---------- KULLANICILAR SEKMESİ ---------- -->
       <section id="panel-users" class="panel">
         <div class="panel-head">
@@ -255,6 +266,7 @@
   <script src="{% static 'js/specs.js' %}?v=2"></script>
   <script src="{% static 'js/skills.js' %}?v=2"></script>
   <script src="{% static 'js/tasks.js' %}?v=6"></script>
+  <script src="{% static 'js/calculations.js' %}?v=1"></script>
   <script src="{% static 'js/app.js' %}?v=4"></script>
 </body>
 </html>
