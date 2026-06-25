@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:proje_haritasi_mobile/core/network/dio_client.dart';
+import 'package:proje_haritasi_mobile/core/notifiers/map_refresh_notifier.dart';
 import 'package:proje_haritasi_mobile/features/map/models/province_model.dart';
 import 'package:proje_haritasi_mobile/features/map/widgets/turkey_map_widget.dart';
 import 'package:proje_haritasi_mobile/features/projects/providers/projects_provider.dart';
@@ -22,6 +23,15 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MapRefreshNotifier>().addListener(_load);
+    });
+  }
+
+  @override
+  void dispose() {
+    context.read<MapRefreshNotifier>().removeListener(_load);
+    super.dispose();
   }
 
   Future<void> _load() async {

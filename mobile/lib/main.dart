@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:proje_haritasi_mobile/core/network/dio_client.dart';
 import 'package:proje_haritasi_mobile/core/router/app_router.dart';
 import 'package:proje_haritasi_mobile/core/theme/app_theme.dart';
+import 'package:proje_haritasi_mobile/core/notifiers/map_refresh_notifier.dart';
 import 'package:proje_haritasi_mobile/features/auth/providers/auth_provider.dart';
 import 'package:proje_haritasi_mobile/features/projects/providers/projects_provider.dart';
 import 'package:proje_haritasi_mobile/features/risks/providers/risks_provider.dart';
@@ -33,8 +34,15 @@ class ProjeHaritasiApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
-        ChangeNotifierProvider<ProjectsProvider>(
+        ChangeNotifierProvider<MapRefreshNotifier>(
+          create: (_) => MapRefreshNotifier(),
+        ),
+        ChangeNotifierProxyProvider<MapRefreshNotifier, ProjectsProvider>(
           create: (_) => ProjectsProvider(),
+          update: (_, mapRefresh, projects) {
+            projects!.mapRefresh = mapRefresh;
+            return projects;
+          },
         ),
         ChangeNotifierProvider<RisksProvider>(
           create: (_) => RisksProvider(),

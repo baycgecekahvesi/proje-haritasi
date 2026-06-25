@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:proje_haritasi_mobile/core/network/dio_client.dart';
+import 'package:proje_haritasi_mobile/core/notifiers/map_refresh_notifier.dart';
 import 'package:proje_haritasi_mobile/features/projects/models/project_model.dart';
 
 class ProjectsProvider extends ChangeNotifier {
   final DioClient _client = DioClient();
+  MapRefreshNotifier? mapRefresh;
 
   List<ProjectModel> _projects = [];
   int _total = 0;
@@ -75,6 +77,7 @@ class ProjectsProvider extends ChangeNotifier {
     try {
       await _client.dio.post('/projects/', data: data);
       await load(resetPage: true);
+      mapRefresh?.refresh();
       return true;
     } on DioException catch (e) {
       _error = e.response?.data?['detail'] as String? ?? 'Proje oluşturulamadı';
@@ -87,6 +90,7 @@ class ProjectsProvider extends ChangeNotifier {
     try {
       await _client.dio.patch('/projects/$id', data: data);
       await load();
+      mapRefresh?.refresh();
       return true;
     } on DioException catch (e) {
       _error = e.response?.data?['detail'] as String? ?? 'Proje güncellenemedi';
@@ -99,6 +103,7 @@ class ProjectsProvider extends ChangeNotifier {
     try {
       await _client.dio.delete('/projects/$id');
       await load();
+      mapRefresh?.refresh();
       return true;
     } on DioException catch (e) {
       _error = e.response?.data?['detail'] as String? ?? 'Proje silinemedi';
