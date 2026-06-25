@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "description": "Karmaşık özellik planlaması ve mimari kararlar için adım adım akıl yürütme"
+    },
+    "sqlite": {
+      "command": "uvx",
+      "args": ["mcp-server-sqlite", "--db-path", "db.sqlite3"],
+      "description": "Geliştirme SQLite veritabanını doğrudan sorgula"
+    },
+    "git": {
+      "command": "uvx",
+      "args": ["mcp-server-git", "--repository", "."],
+      "description": "Commit, diff, log, branch işlemleri için yapılandırılmış git arayüzü"
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"],
+      "description": "IEC standartları ve dış kaynaklar için web erişimi"
+    }
+  }
+}

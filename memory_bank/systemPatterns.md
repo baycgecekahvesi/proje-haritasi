@@ -1,3 +1,4 @@
+
 # System Patterns — ProjeHaritası
 
 *Son güncelleme: 2026-06-25*
