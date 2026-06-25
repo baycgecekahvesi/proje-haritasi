@@ -20,10 +20,10 @@ const _turkishProvinces = [
 ];
 
 const _statusOptions = [
-  {'value': 'planning', 'label': 'Planlama'},
-  {'value': 'active', 'label': 'Aktif'},
-  {'value': 'completed', 'label': 'Tamamlandı'},
-  {'value': 'cancelled', 'label': 'İptal'},
+  {'value': 'aktif', 'label': 'Aktif'},
+  {'value': 'beklemede', 'label': 'Beklemede'},
+  {'value': 'tamamlandi', 'label': 'Tamamlandı'},
+  {'value': 'iptal', 'label': 'İptal'},
 ];
 
 class ProjectFormScreen extends StatefulWidget {
@@ -40,7 +40,7 @@ class _ProjectFormScreenState extends State<ProjectFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   String _province = _turkishProvinces.first;
-  String _status = 'planning';
+  String _status = 'aktif';
   double _progress = 0;
   DateTime? _plannedStart;
   DateTime? _plannedEnd;
@@ -201,6 +201,16 @@ class _ProjectFormScreenState extends State<ProjectFormScreen> {
               ],
             ),
             const SizedBox(height: 24),
+            Consumer<ProjectsProvider>(
+              builder: (_, p, __) {
+                if (p.error == null) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(p.error!,
+                      style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                );
+              },
+            ),
             ElevatedButton(
               onPressed: _loading ? null : _submit,
               child: _loading
