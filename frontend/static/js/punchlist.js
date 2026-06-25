@@ -49,6 +49,7 @@ const PunchList = (() => {
           </div>
           <div class="pl-header-right">
             <div class="pl-ozet-chips" id="pl-ozet-chips"></div>
+            <button class="btn btn-ghost" id="pl-export-btn">⬇ CSV İndir</button>
             ${editor ? `<button class="btn btn-primary" id="pl-yeni-btn">+ Yeni Madde</button>` : ""}
           </div>
         </div>
@@ -83,6 +84,27 @@ const PunchList = (() => {
       </div>`;
 
     if (editor) document.getElementById("pl-yeni-btn").onclick = () => openForm();
+
+    async function exportCSV() {
+      const token = localStorage.getItem("access_token");
+      const projeId = document.getElementById("pl-fil-proje")?.value || "";
+      const tur = _aktifTur();
+      let url = "/api/punch/export";
+      const params = [];
+      if (projeId) params.push(`proje_id=${projeId}`);
+      if (tur) params.push(`tur=${tur}`);
+      if (params.length) url += "?" + params.join("&");
+
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) { UI.toast("İndirme başarısız", "error"); return; }
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "punchlist.csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+    document.getElementById("pl-export-btn").addEventListener("click", exportCSV);
 
     panel.querySelectorAll(".pl-ttab").forEach(b => {
       b.addEventListener("click", () => {

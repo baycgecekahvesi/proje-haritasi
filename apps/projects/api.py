@@ -62,7 +62,7 @@ def list_categories(request):
 @router.post("/categories", response={200: CategoryOut})
 @require_role("admin", "editor")
 def create_category(request, payload: CategoryIn):
-    return Category.objects.create(**payload.dict())
+    return Category.objects.create(**payload.model_dump())
 
 
 # --------------------------------------------------------------------------- #
@@ -133,7 +133,7 @@ def list_projects(
 @router.post("/", response={200: ProjectOut})
 @require_role("admin", "editor")
 def create_project(request, payload: ProjectIn):
-    data = payload.dict()
+    data = payload.model_dump()
     project = Project(owner_id=request.auth["user_id"])
     member_ids = _apply_project_fields(project, data)
     project.save()
@@ -151,7 +151,7 @@ def get_project(request, project_id: int):
 @require_role("admin", "editor")
 def update_project(request, project_id: int, payload: ProjectPatch):
     project = get_object_or_404(Project, id=project_id)
-    data = payload.dict(exclude_unset=True)
+    data = payload.model_dump(exclude_unset=True)
     member_ids = _apply_project_fields(project, data)
     project.save()
     if member_ids is not None:
@@ -214,14 +214,14 @@ def list_tasks(request, project_id: int):
 @require_role("admin", "editor")
 def create_task(request, project_id: int, payload: TaskIn):
     project = get_object_or_404(Project, id=project_id)
-    return Task.objects.create(project=project, **payload.dict())
+    return Task.objects.create(project=project, **payload.model_dump())
 
 
 @router.patch("/{project_id}/tasks/{task_id}", response=TaskOut)
 @require_role("admin", "editor")
 def update_task(request, project_id: int, task_id: int, payload: TaskPatch):
     task = get_object_or_404(Task, id=task_id, project_id=project_id)
-    for field, value in payload.dict(exclude_unset=True).items():
+    for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(task, field, value)
     task.save()
     return task

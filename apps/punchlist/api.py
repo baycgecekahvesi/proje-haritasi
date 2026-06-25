@@ -1,5 +1,8 @@
+import csv
+import io
 from datetime import datetime, date
 from typing import Optional
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from ninja import Router, Schema
 
@@ -118,6 +121,44 @@ def punch_ozet(request, proje_id: Optional[int] = None):
     )
 
 
+@router.get("/export", summary="Punch list CSV export")
+def export_punch(
+    request,
+    proje_id: Optional[int] = None,
+    tur: Optional[str] = None,
+):
+    qs = PunchItem.objects.select_related("proje", "sorumlu")
+    if proje_id: qs = qs.filter(proje_id=proje_id)
+    if tur:      qs = qs.filter(tur=tur)
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([
+        "no", "baslik", "tur", "kategori", "oncelik", "durum",
+        "sorumlu", "hedef_tarih", "kapanma_tarihi", "kapatma_notu",
+        "proje", "tespit_tarihi",
+    ])
+    for item in qs:
+        writer.writerow([
+            item.no,
+            item.baslik,
+            item.get_tur_display(),
+            item.get_kategori_display(),
+            item.get_oncelik_display(),
+            item.get_durum_display(),
+            item.sorumlu.username if item.sorumlu_id else "",
+            item.hedef_tarih or "",
+            item.kapanma_tarihi or "",
+            item.kapatma_notu,
+            item.proje.name,
+            item.tespit_tarihi or "",
+        ])
+
+    response = HttpResponse(buf.getvalue(), content_type="text/csv; charset=utf-8-sig")
+    response["Content-Disposition"] = 'attachment; filename="punchlist.csv"'
+    return response
+
+
 @router.get("/{item_id}", response=PunchOut)
 def get_punch(request, item_id: int):
     return get_object_or_404(PunchItem.objects.select_related("proje", "sorumlu"), id=item_id)
@@ -126,7 +167,7 @@ def get_punch(request, item_id: int):
 @router.post("", response=PunchOut, summary="Yeni punch item")
 @require_role("admin", "editor")
 def create_punch(request, payload: PunchIn):
-    item = PunchItem.objects.create(**payload.dict())
+    item = PunchItem.objects.create(**payload.model_dump())
     return PunchItem.objects.select_related("proje", "sorumlu").get(id=item.id)
 
 
@@ -134,7 +175,7 @@ def create_punch(request, payload: PunchIn):
 @require_role("admin", "editor")
 def patch_punch(request, item_id: int, payload: PunchPatch):
     item = get_object_or_404(PunchItem, id=item_id)
-    for k, v in payload.dict(exclude_unset=True).items():
+    for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(item, k, v)
     item.save()
     return PunchItem.objects.select_related("proje", "sorumlu").get(id=item.id)

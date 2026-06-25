@@ -159,7 +159,7 @@ def create_eplan(
 @require_role("admin", "editor")
 def patch_eplan(request, dok_id: int, payload: EplanPatch):
     dok = get_object_or_404(EplanDokuman, id=dok_id)
-    data = payload.dict(exclude_unset=True)
+    data = payload.model_dump(exclude_unset=True)
     for field, val in data.items():
         setattr(dok, field, val)
     dok.save()

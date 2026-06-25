@@ -87,7 +87,7 @@ def register(request, payload: RegisterIn):
 def update_user(request, user_id: int, payload: UserPatch):
     """Kullanıcı bilgisi/rol/durum güncelle (sadece Admin)."""
     user = get_object_or_404(User.objects.select_related("profile"), id=user_id)
-    data = payload.dict(exclude_unset=True)
+    data = payload.model_dump(exclude_unset=True)
     role = data.pop("role", None)
     meslek_rolu = data.pop("meslek_rolu", None)
     for field, value in data.items():

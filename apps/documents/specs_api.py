@@ -26,7 +26,7 @@ def list_specs(request, spec_type: str = None, status: str = None, search: str =
 @router.post("/", response={200: TechSpecOut})
 @require_role("admin", "editor")
 def create_spec(request, payload: TechSpecIn):
-    data = payload.dict()
+    data = payload.model_dump()
     if data.get("spec_type") not in TechnicalSpec.SpecType.values:
         data["spec_type"] = TechnicalSpec.SpecType.GENERAL
     if data.get("status") not in TechnicalSpec.Status.values:
@@ -47,7 +47,7 @@ def get_spec(request, spec_id: int):
 @require_role("admin", "editor")
 def update_spec(request, spec_id: int, payload: TechSpecIn):
     spec = get_object_or_404(TechnicalSpec, id=spec_id)
-    data = payload.dict()
+    data = payload.model_dump()
     if data.get("spec_type") not in TechnicalSpec.SpecType.values:
         data["spec_type"] = TechnicalSpec.SpecType.GENERAL
     if data.get("status") not in TechnicalSpec.Status.values:

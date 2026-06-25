@@ -1,5 +1,8 @@
+import csv
+import io
 from datetime import datetime
 from typing import Optional
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from ninja import Router, Schema
 
@@ -132,6 +135,47 @@ def io_ozet(request, proje_id: Optional[int] = None):
     )
 
 
+@router.get("/export", summary="I/O listesi CSV export")
+def export_io(
+    request,
+    proje_id: Optional[int] = None,
+    sinyal_tipi: Optional[str] = None,
+):
+    qs = IOPoint.objects.select_related("proje")
+    if proje_id:    qs = qs.filter(proje_id=proje_id)
+    if sinyal_tipi: qs = qs.filter(sinyal_tipi=sinyal_tipi)
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([
+        "tag_no", "tanim", "sinyal_tipi", "plc_rack", "plc_slot", "plc_kanal",
+        "panel_no", "klemens_no", "kablo_no", "alan_cihaz", "sil_seviye",
+        "durum", "kablo_durum", "proje", "notlar",
+    ])
+    for item in qs:
+        writer.writerow([
+            item.tag_no,
+            item.tanim,
+            item.get_sinyal_tipi_display(),
+            item.plc_rack,
+            item.plc_slot,
+            item.plc_kanal,
+            item.panel_no,
+            item.klemens_no,
+            item.kablo_no,
+            item.alan_cihaz,
+            item.sil_seviye,
+            item.get_durum_display(),
+            item.get_kablo_durum_display(),
+            item.proje.name,
+            item.notlar,
+        ])
+
+    response = HttpResponse(buf.getvalue(), content_type="text/csv; charset=utf-8-sig")
+    response["Content-Disposition"] = 'attachment; filename="iolist.csv"'
+    return response
+
+
 @router.get("/{io_id}", response=IOOut)
 def get_io(request, io_id: int):
     return get_object_or_404(IOPoint.objects.select_related("proje"), id=io_id)
@@ -140,7 +184,7 @@ def get_io(request, io_id: int):
 @router.post("", response=IOOut, summary="Yeni I/O noktası")
 @require_role("admin", "editor")
 def create_io(request, payload: IOIn):
-    item = IOPoint.objects.create(**payload.dict())
+    item = IOPoint.objects.create(**payload.model_dump())
     return IOPoint.objects.select_related("proje").get(id=item.id)
 
 
@@ -148,7 +192,7 @@ def create_io(request, payload: IOIn):
 @require_role("admin", "editor")
 def patch_io(request, io_id: int, payload: IOPatch):
     item = get_object_or_404(IOPoint, id=io_id)
-    for k, v in payload.dict(exclude_unset=True).items():
+    for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(item, k, v)
     item.save()
     return IOPoint.objects.select_related("proje").get(id=item.id)

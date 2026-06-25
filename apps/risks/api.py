@@ -119,7 +119,7 @@ def create_risk(request, payload: RiskIn):
         raise HttpError(400, "Olasılık 1-5 arasında olmalı")
     if not 1 <= payload.etki <= 5:
         raise HttpError(400, "Etki 1-5 arasında olmalı")
-    risk = Risk.objects.create(**payload.dict())
+    risk = Risk.objects.create(**payload.model_dump())
     return Risk.objects.select_related("proje", "sorumlu").get(id=risk.id)
 
 
@@ -127,7 +127,7 @@ def create_risk(request, payload: RiskIn):
 @require_role("admin", "editor")
 def patch_risk(request, risk_id: int, payload: RiskPatch):
     risk = get_object_or_404(Risk, id=risk_id)
-    data = payload.dict(exclude_unset=True)
+    data = payload.model_dump(exclude_unset=True)
     for k, v in data.items():
         setattr(risk, k, v)
     risk.save()

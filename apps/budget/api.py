@@ -30,7 +30,7 @@ def get_budget(request, project_id: int):
 @require_role("admin", "editor")
 def update_budget(request, project_id: int, payload: BudgetPatch):
     budget = _get_or_create_budget(project_id)
-    for field, value in payload.dict(exclude_unset=True).items():
+    for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(budget, field, value)
     budget.save()
     return Budget.objects.prefetch_related("expenses").get(id=budget.id)
@@ -40,7 +40,7 @@ def update_budget(request, project_id: int, payload: BudgetPatch):
 @require_role("admin", "editor")
 def add_expense(request, project_id: int, payload: ExpenseIn):
     budget = _get_or_create_budget(project_id)
-    return Expense.objects.create(budget=budget, **payload.dict())
+    return Expense.objects.create(budget=budget, **payload.model_dump())
 
 
 @router.delete("/{project_id}/expenses/{expense_id}", response={200: dict})
