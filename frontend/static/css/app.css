@@ -1799,4 +1799,103 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   color: var(--muted, #666);
 }
 
+/* ====== AI INSIGHTS ====== */
+.ai-selector-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.ai-selector-bar label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text, #1f2433);
+}
+.ai-selector-bar select {
+  padding: 8px 12px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 280px;
+  background: var(--surface, #fff);
+  color: var(--text, #1f2433);
+}
+.ai-card {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.ai-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.ai-card-header h3 {
+  margin: 0;
+  flex: 1;
+  font-size: 16px;
+  color: var(--text, #1f2433);
+}
+.ai-card-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+.ai-risk-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ai-probability-bar {
+  height: 8px;
+  background: var(--border, #e2e8f0);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.ai-prob-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.ai-prob-label {
+  font-size: 13px;
+  color: var(--muted, #555);
+  margin: 0 0 10px;
+}
+.ai-factors {
+  margin: 8px 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--text, #444);
+  line-height: 1.6;
+}
+.ai-recommendation {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--muted, #555);
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border-left: 3px solid var(--primary, #4f6ef7);
+}
+.ai-budget-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--text, #333);
+}
+.ai-meta {
+  font-size: 13px;
+  color: var(--muted, #555);
+  margin: 4px 0;
+}
+
 /* ====== HAKEDİŞ & PUANTAJ ====== */

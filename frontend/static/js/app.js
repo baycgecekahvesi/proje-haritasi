@@ -287,6 +287,7 @@ const App = (() => {
     if (tab === "dashboard")   Dashboard.load();
     if (tab === "payroll")     Payroll.load();
     if (tab === "contractor")  Contractor.load();
+    if (tab === "ai-insights") AiInsights.load();
     if (tab === "users")    Users.render();
   }
 

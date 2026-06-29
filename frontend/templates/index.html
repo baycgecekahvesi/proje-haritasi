@@ -7,7 +7,7 @@
   <title>Otomasyon Proje Takip</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=16" />
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=17" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 </head>
@@ -102,6 +102,11 @@
           <div class="sidebar-group">
             <span class="sidebar-group-label">Portal</span>
             <button class="tab" data-tab="contractor">🏗️ Müteahhit Portalı</button>
+          </div>
+
+          <div class="sidebar-group">
+            <span class="sidebar-group-label">Yapay Zeka</span>
+            <button class="tab" data-tab="ai-insights">🤖 AI Analiz</button>
           </div>
 
           <div class="sidebar-group" id="sidebar-group-admin" style="display:none">
@@ -346,6 +351,15 @@
         </div>
       </section>
 
+      <!-- ---------- AI ANALİZ & TAHMİNLER ---------- -->
+      <section id="panel-ai-insights" class="panel">
+        <div class="section-header">
+          <h2>🤖 AI Analiz &amp; Tahminler</h2>
+          <p style="color:#666;font-size:13px;margin:0">Proje seçerek gecikme riski, bütçe tahmini ve benzer proje analizine ulaşın.</p>
+        </div>
+        <div id="ai-content"></div>
+      </section>
+
       <!-- ---------- KULLANICILAR SEKMESİ ---------- -->
       <section id="panel-users" class="panel">
         <div class="panel-head">
@@ -396,6 +410,7 @@
   <script src="{% static 'js/dashboard.js' %}?v=1"></script>
   <script src="{% static 'js/payroll.js' %}?v=1"></script>
   <script src="{% static 'js/contractor.js' %}?v=1"></script>
-  <script src="{% static 'js/app.js' %}?v=11"></script>
+  <script src="{% static 'js/ai_insights.js' %}?v=1"></script>
+  <script src="{% static 'js/app.js' %}?v=12"></script>
 </body>
 </html>
