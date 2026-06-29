@@ -109,3 +109,23 @@ class TechDocOut(Schema):
     @staticmethod
     def resolve_uploaded_by_username(obj) -> Optional[str]:
         return obj.uploaded_by.username if obj.uploaded_by_id else None
+
+
+class SitePhotoOut(Schema):
+    id:          int
+    project_id:  int
+    uploaded_by_username: str
+    photo_url:   str
+    description: str
+    latitude:    Optional[float] = None
+    longitude:   Optional[float] = None
+    taken_at:    Optional[datetime] = None
+    uploaded_at: datetime
+
+    @staticmethod
+    def resolve_uploaded_by_username(obj) -> str:
+        return obj.uploaded_by.username
+
+    @staticmethod
+    def resolve_photo_url(obj) -> str:
+        return obj.photo.url if obj.photo else ""

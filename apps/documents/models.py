@@ -1,5 +1,6 @@
 import os
 
+from django.conf import settings
 from django.db import models
 
 from apps.accounts.models import User
@@ -201,3 +202,22 @@ class EplanDokuman(models.Model):
 
     def __str__(self):
         return f"{self.seri_no} {self.baslik} ({self.revizyon_no})"
+
+
+class SitePhoto(models.Model):
+    project     = models.ForeignKey("projects.Project", on_delete=models.CASCADE, related_name="site_photos")
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="site_photos")
+    photo       = models.ImageField(upload_to="site_photos/%Y/%m/")
+    description = models.TextField(blank=True)
+    latitude    = models.FloatField(null=True, blank=True)
+    longitude   = models.FloatField(null=True, blank=True)
+    taken_at    = models.DateTimeField(null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-taken_at", "-uploaded_at"]
+        verbose_name = "Saha Fotoğrafı"
+        verbose_name_plural = "Saha Fotoğrafları"
+
+    def __str__(self):
+        return f"{self.project.name} — {self.uploaded_at:%Y-%m-%d}"

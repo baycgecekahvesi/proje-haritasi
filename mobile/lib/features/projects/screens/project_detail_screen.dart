@@ -7,6 +7,7 @@ import 'package:proje_haritasi_mobile/features/auth/providers/auth_provider.dart
 import 'package:proje_haritasi_mobile/features/projects/models/project_model.dart';
 import 'package:proje_haritasi_mobile/features/projects/providers/projects_provider.dart';
 import 'package:proje_haritasi_mobile/features/tasks/models/task_model.dart';
+import 'package:proje_haritasi_mobile/features/site_photos/screens/site_photo_screen.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final String projectId;
@@ -90,18 +91,31 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-        actions: isEditor
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () => context.push('/projects/${p.id}/edit'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.camera_alt),
+            tooltip: 'Saha Fotoğrafları',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SitePhotoScreen(
+                  projectId: p.id,
+                  projectName: p.name,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: _deleteProject,
-                ),
-              ]
-            : null,
+              ),
+            ),
+          ),
+          if (isEditor) ...[
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => context.push('/projects/${p.id}/edit'),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: _deleteProject,
+            ),
+          ],
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,

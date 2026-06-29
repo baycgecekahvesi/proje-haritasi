@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from ninja import Schema
@@ -55,3 +56,15 @@ class BildirimOut(Schema):
 
 class MessageOut(Schema):
     detail: str
+
+
+class DeviceTokenIn(Schema):
+    fcm_token:   str
+    device_type: str = "android"
+
+
+class DeviceTokenOut(Schema):
+    id:          int
+    device_type: str
+    is_active:   bool
+    created_at:  datetime

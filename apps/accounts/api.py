@@ -5,8 +5,8 @@ from ninja import Router
 from ninja.errors import HttpError
 
 from .decorators import require_role
-from .models import Bildirim, Role, User, UserProfile
-from .schemas import BildirimOut, LoginIn, MessageOut, RegisterIn, TokenOut, UserOut, UserPatch
+from .models import Bildirim, DeviceToken, Role, User, UserProfile
+from .schemas import BildirimOut, DeviceTokenIn, DeviceTokenOut, LoginIn, MessageOut, RegisterIn, TokenOut, UserOut, UserPatch
 from .services import create_token
 
 router = Router()
@@ -145,3 +145,16 @@ def mark_all_read(request):
     user = get_object_or_404(User, id=request.auth["user_id"])
     Bildirim.objects.filter(alici=user, okundu=False).update(okundu=True)
     return {"detail": "ok"}
+
+
+@router.post("/register-device", response={200: DeviceTokenOut}, summary="FCM cihaz token'ı kaydet")
+def register_device(request, payload: DeviceTokenIn):
+    """Flutter uygulaması FCM token'ını bu endpoint ile kaydeder."""
+    auth = getattr(request, "auth", {}) or {}
+    user_id = auth["user_id"]
+    token, _ = DeviceToken.objects.update_or_create(
+        user_id=user_id,
+        device_type=payload.device_type,
+        defaults={"fcm_token": payload.fcm_token, "is_active": True},
+    )
+    return token
