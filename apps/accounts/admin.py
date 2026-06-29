@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
-from .models import DeviceToken, User, UserProfile
+from .models import User, UserProfile
 
 
 class UserProfileInline(admin.StackedInline):
@@ -27,11 +27,3 @@ class UserProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "role", "phone", "created_at")
     list_filter = ("role",)
     search_fields = ("user__username", "user__email", "phone")
-
-
-@admin.register(DeviceToken)
-class DeviceTokenAdmin(admin.ModelAdmin):
-    list_display = ("user", "device_type", "is_active", "created_at", "updated_at")
-    list_filter = ("device_type", "is_active")
-    search_fields = ("user__username",)
-    readonly_fields = ("created_at", "updated_at")

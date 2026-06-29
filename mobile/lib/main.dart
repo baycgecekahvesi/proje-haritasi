@@ -1,25 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:proje_haritasi_mobile/core/network/dio_client.dart';
 import 'package:proje_haritasi_mobile/core/router/app_router.dart';
 import 'package:proje_haritasi_mobile/core/theme/app_theme.dart';
 import 'package:proje_haritasi_mobile/core/notifiers/map_refresh_notifier.dart';
-import 'package:proje_haritasi_mobile/core/notifications/push_notification_service.dart';
 import 'package:proje_haritasi_mobile/features/auth/providers/auth_provider.dart';
 import 'package:proje_haritasi_mobile/features/projects/providers/projects_provider.dart';
 import 'package:proje_haritasi_mobile/features/risks/providers/risks_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  try {
-    await Firebase.initializeApp();
-    await PushNotificationService().initialize();
-  } catch (_) {
-    // Firebase yapılandırılmamışsa devam et
-  }
 
   // Set up auth expiry callback before running the app
   final authProvider = AuthProvider();

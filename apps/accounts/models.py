@@ -60,23 +60,3 @@ class Bildirim(models.Model):
 
     def __str__(self):
         return f"{self.alici.username} — {self.baslik}"
-
-
-class DeviceToken(models.Model):
-    class DeviceType(models.TextChoices):
-        ANDROID = "android", "Android"
-        IOS     = "ios",     "iOS"
-
-    user        = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="device_tokens")
-    fcm_token   = models.TextField()
-    device_type = models.CharField(max_length=10, choices=DeviceType.choices, default=DeviceType.ANDROID)
-    is_active   = models.BooleanField(default=True)
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Cihaz Token"
-        verbose_name_plural = "Cihaz Tokenları"
-
-    def __str__(self):
-        return f"{self.user.username} — {self.device_type}"
