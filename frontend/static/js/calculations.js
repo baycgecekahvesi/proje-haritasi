@@ -1,623 +1,483 @@
-// ===================== MÜHENDİSLİK HESAPLAMALARI =====================
 const Calculations = (() => {
-  let activeTab = "cable";
-  let activeMotorMode = "torque";
-
-  // IEC 60364-5-52 Tip C akım taşıma kapasiteleri (A)
-  const AKIM_KAPASITESI = {
-    Cu: { 1.5:18, 2.5:25, 4:34, 6:44, 10:61, 16:82, 25:108, 35:135, 50:168, 70:207, 95:250, 120:292, 150:335, 185:382, 240:453 },
-    Al: { 1.5:13, 2.5:19, 4:26, 6:34, 10:47, 16:63, 25:83, 35:102, 50:127, 70:157, 95:190, 120:222, 150:253, 185:288, 240:342 }
+  // ─── Hesaplama tanımları ───────────────────────────────────────────
+  // Her hesaplama: label, category, fields (her field: key, label, type, unit, default, required)
+  const CALC_DEFS = {
+    // ── ELEKTRİK ──
+    cable_section: {
+      label: "Kablo Kesiti Seçimi",
+      category: "electric",
+      standard: "IEC 60364-5-52",
+      fields: [
+        { key: "current_a",             label: "Akım",                 type: "number", unit: "A",   default: 50,   required: true },
+        { key: "length_m",              label: "Kablo Uzunluğu",       type: "number", unit: "m",   default: 100,  required: true },
+        { key: "voltage_v",             label: "Gerilim",              type: "number", unit: "V",   default: 400  },
+        { key: "max_voltage_drop_pct",  label: "Max. Voltaj Düşümü",  type: "number", unit: "%",   default: 3.0  },
+        { key: "material",              label: "İletken Malzeme",      type: "select", options: ["copper","aluminum"], default: "copper" },
+        { key: "system",                label: "Sistem",               type: "select", options: ["3phase","1phase"],   default: "3phase" },
+        { key: "installation",          label: "Döşeme Tipi",          type: "select", options: ["conduit","tray","direct"], default: "conduit" },
+      ],
+      resultKeys: ["selected_section_mm2","actual_voltage_drop_pct","actual_voltage_drop_v","current_capacity_a","standard"],
+      resultLabels: {"selected_section_mm2":"Seçilen Kesit (mm²)","actual_voltage_drop_pct":"Voltaj Düşümü (%)","actual_voltage_drop_v":"Voltaj Düşümü (V)","current_capacity_a":"Akım Kapasitesi (A)","standard":"Standart"},
+    },
+    motor_current: {
+      label: "Motor Akımı Hesabı",
+      category: "electric",
+      standard: "TS EN 60947-4-1",
+      fields: [
+        { key: "power_kw",      label: "Motor Gücü",       type: "number", unit: "kW",  default: 22,   required: true },
+        { key: "voltage_v",     label: "Gerilim",          type: "number", unit: "V",   default: 380  },
+        { key: "efficiency",    label: "Verim (η)",        type: "number", unit: "",    default: 0.92 },
+        { key: "power_factor",  label: "Güç Faktörü (cosφ)", type: "number", unit: "",  default: 0.85 },
+        { key: "system",        label: "Sistem",           type: "select", options: ["3phase","1phase"], default: "3phase" },
+      ],
+      resultKeys: ["full_load_current_a","starting_current_a","recommended_fuse_a","thermal_relay_min_a","thermal_relay_max_a"],
+      resultLabels: {"full_load_current_a":"Tam Yük Akımı (A)","starting_current_a":"Kalkış Akımı (A)","recommended_fuse_a":"Önerilen Sigorta (A)","thermal_relay_min_a":"Termik Röle Min. (A)","thermal_relay_max_a":"Termik Röle Max. (A)"},
+    },
+    voltage_drop: {
+      label: "Voltaj Düşümü",
+      category: "electric",
+      fields: [
+        { key: "current_a",     label: "Akım",         type: "number", unit: "A",   default: 30,   required: true },
+        { key: "length_m",      label: "Uzunluk",      type: "number", unit: "m",   default: 50,   required: true },
+        { key: "section_mm2",   label: "Kesit",        type: "number", unit: "mm²", default: 6,    required: true },
+        { key: "voltage_v",     label: "Gerilim",      type: "number", unit: "V",   default: 400  },
+        { key: "system",        label: "Sistem",       type: "select", options: ["3phase","1phase"], default: "3phase" },
+        { key: "material",      label: "Malzeme",      type: "select", options: ["copper","aluminum"], default: "copper" },
+      ],
+      resultKeys: ["voltage_drop_v","voltage_drop_pct","load_voltage_v"],
+      resultLabels: {"voltage_drop_v":"Voltaj Düşümü (V)","voltage_drop_pct":"Voltaj Düşümü (%)","load_voltage_v":"Yük Gerilimi (V)"},
+    },
+    fuse_selection: {
+      label: "Sigorta Seçimi",
+      category: "electric",
+      standard: "IEC 60269",
+      fields: [
+        { key: "load_current_a", label: "Yük Akımı", type: "number", unit: "A", default: 25, required: true },
+        { key: "load_type",      label: "Yük Tipi",  type: "select", options: ["resistive","motor","capacitor","transformer"], default: "resistive" },
+        { key: "voltage_v",      label: "Gerilim",   type: "number", unit: "V", default: 400 },
+      ],
+      resultKeys: ["selected_fuse_a","fuse_type","calculated_current_a"],
+      resultLabels: {"selected_fuse_a":"Seçilen Sigorta (A)","fuse_type":"Sigorta Tipi","calculated_current_a":"Hesaplanan Akım (A)"},
+    },
+    power_factor_correction: {
+      label: "Güç Faktörü Düzeltme",
+      category: "electric",
+      standard: "IEC 61642",
+      fields: [
+        { key: "active_power_kw", label: "Aktif Güç",      type: "number", unit: "kW",  default: 100,  required: true },
+        { key: "current_pf",      label: "Mevcut cosφ",    type: "number", unit: "",    default: 0.75, required: true },
+        { key: "target_pf",       label: "Hedef cosφ",     type: "number", unit: "",    default: 0.95 },
+        { key: "voltage_v",       label: "Gerilim",        type: "number", unit: "V",   default: 400  },
+      ],
+      resultKeys: ["required_reactive_power_kvar","capacitance_per_phase_uf","kva_reduction"],
+      resultLabels: {"required_reactive_power_kvar":"Gerekli Reaktif Güç (kVAR)","capacitance_per_phase_uf":"Kondansatör/Faz (μF)","kva_reduction":"kVA Azalması"},
+    },
+    short_circuit_current: {
+      label: "Kısa Devre Akımı",
+      category: "electric",
+      standard: "IEC 60909",
+      fields: [
+        { key: "transformer_kva", label: "Trafo Gücü",    type: "number", unit: "kVA", default: 630,  required: true },
+        { key: "impedance_pct",   label: "%Uk Empedans",  type: "number", unit: "%",   default: 6.0  },
+        { key: "voltage_v",       label: "Gerilim",       type: "number", unit: "V",   default: 400  },
+      ],
+      resultKeys: ["short_circuit_current_a","peak_current_a","nominal_current_a"],
+      resultLabels: {"short_circuit_current_a":"Kısa Devre Akımı (A)","peak_current_a":"Tepik Akım (A)","nominal_current_a":"Nominal Akım (A)"},
+    },
+    lighting_calculation: {
+      label: "Aydınlatma Hesabı",
+      category: "electric",
+      standard: "TS EN 12464-1",
+      fields: [
+        { key: "area_m2",                    label: "Alan",                type: "number", unit: "m²",    default: 100,  required: true },
+        { key: "required_lux",               label: "Gerekli Aydınlık",   type: "number", unit: "lüx",   default: 500  },
+        { key: "luminaire_efficacy_lm_per_w",label: "Armatür Etkinliği", type: "number", unit: "lm/W",  default: 100  },
+        { key: "utilization_factor",          label: "Kullanım Faktörü",  type: "number", unit: "",       default: 0.6  },
+        { key: "maintenance_factor",          label: "Bakım Faktörü",     type: "number", unit: "",       default: 0.8  },
+      ],
+      resultKeys: ["required_total_lumen","total_power_w","power_density_w_m2"],
+      resultLabels: {"required_total_lumen":"Toplam Işık Akısı (lm)","total_power_w":"Toplam Güç (W)","power_density_w_m2":"Işık Yoğunluğu (W/m²)"},
+    },
+    grounding_resistance: {
+      label: "Topraklama Direnci",
+      category: "electric",
+      standard: "IEC 60364-5-54",
+      fields: [
+        { key: "rod_length_m",          label: "Çubuk Uzunluğu",    type: "number", unit: "m",     default: 2.0 },
+        { key: "rod_diameter_mm",       label: "Çubuk Çapı",        type: "number", unit: "mm",    default: 16  },
+        { key: "soil_resistivity_ohm_m",label: "Toprak Özdirenci", type: "number", unit: "Ω·m",   default: 100 },
+      ],
+      resultKeys: ["grounding_resistance_ohm","parallel_rods_for_10ohm"],
+      resultLabels: {"grounding_resistance_ohm":"Topraklama Direnci (Ω)","parallel_rods_for_10ohm":"10Ω için Gerekli Paralel Çubuk"},
+    },
+    ohms_law: {
+      label: "Ohm Yasası",
+      category: "electric",
+      fields: [
+        { key: "voltage_v",      label: "Gerilim (V)",   type: "number", unit: "V",  default: null },
+        { key: "current_a",      label: "Akım (I)",      type: "number", unit: "A",  default: null },
+        { key: "resistance_ohm", label: "Direnç (R)",    type: "number", unit: "Ω",  default: null },
+        { key: "power_w",        label: "Güç (P)",       type: "number", unit: "W",  default: null },
+      ],
+      note: "En az 2 değer girin",
+      resultKeys: ["voltage_v","current_a","resistance_ohm","power_w"],
+      resultLabels: {"voltage_v":"Gerilim (V)","current_a":"Akım (A)","resistance_ohm":"Direnç (Ω)","power_w":"Güç (W)"},
+    },
+    transformer_sizing: {
+      label: "Transformatör Seçimi",
+      category: "electric",
+      standard: "IEC 60076",
+      fields: [
+        { key: "voltage_secondary_v", label: "Sekonder Gerilim", type: "number", unit: "V", default: 400 },
+      ],
+      note: "Yük listesi JSON olarak girin: [{\"power_kw\":50,\"pf\":0.85,\"demand_factor\":0.8}]",
+      fields_extra: [
+        { key: "loads_json", label: "Yük Listesi (JSON)", type: "textarea", required: true,
+          default: '[{"power_kw":50,"pf":0.85,"demand_factor":0.8},{"power_kw":30,"pf":0.9,"demand_factor":0.7}]' }
+      ],
+      resultKeys: ["selected_transformer_kva","total_active_power_kw","total_apparent_power_kva","secondary_nominal_current_a"],
+      resultLabels: {"selected_transformer_kva":"Seçilen Trafo (kVA)","total_active_power_kw":"Toplam Aktif Güç (kW)","total_apparent_power_kva":"Toplam Görünür Güç (kVA)","secondary_nominal_current_a":"Nominal Akım (A)"},
+    },
+    // ── ELEKTRONİK ──
+    resistor_divider: {
+      label: "Gerilim Bölücü",
+      category: "electronic",
+      fields: [
+        { key: "vin",      label: "Giriş Gerilimi",  type: "number", unit: "V",  default: 12,    required: true },
+        { key: "r1_ohm",   label: "R1",              type: "number", unit: "Ω",  default: 10000, required: true },
+        { key: "r2_ohm",   label: "R2",              type: "number", unit: "Ω",  default: 4700,  required: true },
+      ],
+      resultKeys: ["output_voltage_v","current_ma","power_r1_mw","power_r2_mw","divider_ratio"],
+      resultLabels: {"output_voltage_v":"Çıkış Gerilimi (V)","current_ma":"Akım (mA)","power_r1_mw":"R1 Gücü (mW)","power_r2_mw":"R2 Gücü (mW)","divider_ratio":"Bölme Oranı"},
+    },
+    rc_filter: {
+      label: "RC Filtre",
+      category: "electronic",
+      fields: [
+        { key: "resistance_ohm",   label: "Direnç",       type: "number", unit: "Ω",  default: 10000, required: true },
+        { key: "capacitance_uf",   label: "Kondansatör",  type: "number", unit: "μF", default: 0.1,   required: true },
+        { key: "filter_type",      label: "Filtre Tipi",  type: "select", options: ["lowpass","highpass"], default: "lowpass" },
+      ],
+      resultKeys: ["cutoff_frequency_hz","time_constant_ms"],
+      resultLabels: {"cutoff_frequency_hz":"Kesme Frekansı (Hz)","time_constant_ms":"Zaman Sabiti (ms)"},
+    },
+    led_resistor: {
+      label: "LED Direnç Hesabı",
+      category: "electronic",
+      fields: [
+        { key: "supply_v",        label: "Besleme Gerilimi", type: "number", unit: "V",  default: 5,   required: true },
+        { key: "led_forward_v",   label: "LED İleri Gerilim",type: "number", unit: "V",  default: 2.0 },
+        { key: "led_current_ma",  label: "LED Akımı",        type: "number", unit: "mA", default: 20  },
+      ],
+      resultKeys: ["standard_resistance_ohm","actual_current_ma","power_dissipation_mw","recommended_wattage"],
+      resultLabels: {"standard_resistance_ohm":"Standart Direnç (Ω)","actual_current_ma":"Gerçek Akım (mA)","power_dissipation_mw":"Güç Kaybı (mW)","recommended_wattage":"Önerilen Watt"},
+    },
+    series_parallel_resistor: {
+      label: "Seri/Paralel Direnç",
+      category: "electronic",
+      note: "Direnç değerlerini virgülle ayırın",
+      fields: [
+        { key: "resistors_csv",  label: "Dirençler (Ω)", type: "text",   unit: "",  default: "100,220,330", required: true },
+        { key: "connection",     label: "Bağlantı",      type: "select", options: ["series","parallel"], default: "series" },
+      ],
+      resultKeys: ["total_resistance_ohm","connection_type"],
+      resultLabels: {"total_resistance_ohm":"Toplam Direnç (Ω)","connection_type":"Bağlantı Tipi"},
+    },
+    capacitor_energy: {
+      label: "Kondansatör Enerjisi",
+      category: "electronic",
+      fields: [
+        { key: "capacitance_uf", label: "Kapasitans",  type: "number", unit: "μF", default: 1000, required: true },
+        { key: "voltage_v",      label: "Gerilim",     type: "number", unit: "V",  default: 24,   required: true },
+      ],
+      resultKeys: ["energy_joules","charge_microcoulombs"],
+      resultLabels: {"energy_joules":"Enerji (J)","charge_microcoulombs":"Yük (μC)"},
+    },
+    // ── OTOMASYON ──
+    pneumatic_cylinder_force: {
+      label: "Pnömatik Silindir Kuvveti",
+      category: "automation",
+      standard: "ISO 6432 / ISO 15552",
+      fields: [
+        { key: "bore_mm",          label: "Piston Çapı",     type: "number", unit: "mm",  default: 63,  required: true },
+        { key: "pressure_bar",     label: "Basınç",          type: "number", unit: "bar", default: 6.0, required: true },
+        { key: "rod_mm",           label: "Mil Çapı",        type: "number", unit: "mm",  default: 20  },
+        { key: "stroke_direction", label: "Hareket Yönü",    type: "select", options: ["extend","retract"], default: "extend" },
+        { key: "efficiency",       label: "Verim",           type: "number", unit: "",    default: 0.85 },
+      ],
+      resultKeys: ["actual_force_n","actual_force_kgf","theoretical_force_n","effective_area_cm2"],
+      resultLabels: {"actual_force_n":"Gerçek Kuvvet (N)","actual_force_kgf":"Gerçek Kuvvet (kgf)","theoretical_force_n":"Teorik Kuvvet (N)","effective_area_cm2":"Etkin Alan (cm²)"},
+    },
+    pneumatic_air_consumption: {
+      label: "Pnömatik Hava Tüketimi",
+      category: "automation",
+      fields: [
+        { key: "bore_mm",              label: "Piston Çapı",     type: "number", unit: "mm",   default: 63,  required: true },
+        { key: "stroke_mm",            label: "Strok",           type: "number", unit: "mm",   default: 200, required: true },
+        { key: "cycles_per_min",       label: "Çevrim/Dak.",     type: "number", unit: "1/dk", default: 10,  required: true },
+        { key: "working_pressure_bar", label: "Çalışma Basıncı", type: "number", unit: "bar",  default: 6.0 },
+        { key: "rod_mm",               label: "Mil Çapı",        type: "number", unit: "mm",   default: 20  },
+      ],
+      resultKeys: ["consumption_dm3_per_min","consumption_nm3_per_hour","consumption_per_cycle_dm3"],
+      resultLabels: {"consumption_dm3_per_min":"Tüketim (dm³/dk)","consumption_nm3_per_hour":"Tüketim (Nm³/saat)","consumption_per_cycle_dm3":"Çevrim Başına (dm³)"},
+    },
+    vfd_selection: {
+      label: "VFD Sürücü Seçimi",
+      category: "automation",
+      standard: "IEC 61800-2",
+      fields: [
+        { key: "motor_power_kw",   label: "Motor Gücü",      type: "number", unit: "kW", default: 22, required: true },
+        { key: "overload_factor",  label: "Yük Darbesi Kat.", type: "number", unit: "×",  default: 1.5 },
+        { key: "altitude_m",       label: "İrtifa",          type: "number", unit: "m",  default: 0 },
+      ],
+      resultKeys: ["selected_vfd_kw","required_vfd_kw"],
+      resultLabels: {"selected_vfd_kw":"Seçilen VFD (kW)","required_vfd_kw":"Gerekli VFD (kW)"},
+    },
+    plc_io_count: {
+      label: "PLC I/O Hesabı",
+      category: "automation",
+      fields: [
+        { key: "digital_inputs",  label: "Dijital Giriş (DI)",  type: "number", unit: "adet", default: 32, required: true },
+        { key: "digital_outputs", label: "Dijital Çıkış (DO)",  type: "number", unit: "adet", default: 24, required: true },
+        { key: "analog_inputs",   label: "Analog Giriş (AI)",   type: "number", unit: "adet", default: 8  },
+        { key: "analog_outputs",  label: "Analog Çıkış (AO)",   type: "number", unit: "adet", default: 4  },
+        { key: "spare_pct",       label: "Yedek %",             type: "number", unit: "%",    default: 20 },
+      ],
+      resultKeys: ["required_di","required_do","modules_di","modules_do","modules_ai","modules_ao","total_modules","power_supplies"],
+      resultLabels: {"required_di":"Gerekli DI","required_do":"Gerekli DO","modules_di":"DI Modülü","modules_do":"DO Modülü","modules_ai":"AI Modülü","modules_ao":"AO Modülü","total_modules":"Toplam Modül","power_supplies":"Güç Kaynağı"},
+    },
+    conveyor_capacity: {
+      label: "Konveyör Kapasitesi",
+      category: "automation",
+      fields: [
+        { key: "belt_width_mm",          label: "Bant Genişliği",    type: "number", unit: "mm",      default: 600, required: true },
+        { key: "belt_speed_m_s",         label: "Bant Hızı",         type: "number", unit: "m/s",     default: 1.5, required: true },
+        { key: "material_density_kg_m3", label: "Malzeme Yoğunluğu", type: "number", unit: "kg/m³",   default: 1600 },
+        { key: "inclination_deg",        label: "Eğim Açısı",        type: "number", unit: "°",       default: 0   },
+        { key: "fill_factor",            label: "Dolum Faktörü",     type: "number", unit: "",        default: 0.75 },
+      ],
+      resultKeys: ["capacity_t_per_hour","volumetric_capacity_m3_h","estimated_drive_power_kw"],
+      resultLabels: {"capacity_t_per_hour":"Kapasite (t/saat)","volumetric_capacity_m3_h":"Hacimsel Kapasite (m³/saat)","estimated_drive_power_kw":"Tahmini Sürücü Gücü (kW)"},
+    },
+    pid_tuning_ziegler_nichols: {
+      label: "PID Parametre Hesabı (Z-N)",
+      category: "automation",
+      fields: [
+        { key: "ultimate_gain_ku",    label: "Kritik Kazanç (Ku)",   type: "number", unit: "",  default: 1.5, required: true },
+        { key: "ultimate_period_pu",  label: "Kritik Periyot (Pu)",  type: "number", unit: "s", default: 10,  required: true },
+        { key: "controller_type",     label: "Kontrolör Tipi",       type: "select", options: ["p","pi","pid"], default: "pid" },
+      ],
+      resultKeys: ["kp","ki","kd","ti","td"],
+      resultLabels: {"kp":"Kp (Oransal)","ki":"Ki (İntegral)","kd":"Kd (Türevsel)","ti":"Ti (s)","td":"Td (s)"},
+    },
+    encoder_resolution: {
+      label: "Enkoder Çözünürlüğü",
+      category: "automation",
+      fields: [
+        { key: "pulses_per_rev", label: "Darbe/Tur (PPR)", type: "number", unit: "ppr", default: 1024, required: true },
+        { key: "gear_ratio",     label: "Dişli Oranı",     type: "number", unit: "×",   default: 1.0  },
+        { key: "lead_mm",        label: "Vida Adımı (opt)", type: "number", unit: "mm",  default: null },
+      ],
+      resultKeys: ["angular_resolution_deg","angular_resolution_arcmin","linear_resolution_um"],
+      resultLabels: {"angular_resolution_deg":"Açısal Çözünürlük (°)","angular_resolution_arcmin":"Açısal Çözünürlük (')","linear_resolution_um":"Doğrusal Çözünürlük (μm)"},
+    },
   };
-  const KESITLER = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240];
 
-  // IEC 60947-4 Motor koruma şalterleri standart değerleri (A)
-  const MMS_DEGERLERI = [0.1,0.16,0.25,0.4,0.63,1,1.6,2.5,4,6.3,10,16,25,32,40,50,63,80,100,125,160,200,250];
-  // Standart sigorta değerleri (A)
-  const SIGORTA_SERISI = [2,4,6,10,13,16,20,25,32,40,50,63,80,100,125,160,200,250,315,400,500,630];
+  const CAT_LABELS = { electric: "Elektrik", electronic: "Elektronik", automation: "Otomasyon" };
 
-  function bindEvents() {
-    document.querySelectorAll(".calc-tab-btn").forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll(".calc-tab-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        activeTab = btn.dataset.calcTab;
-        render();
-      };
+  let _currentCalc = null;
+  let _lastResult = null;
+
+  // ─── Ana load ──────────────────────────────────────────────────────
+  function load() {
+    _renderCategories();
+  }
+
+  function _renderCategories() {
+    const wrap = document.getElementById('calc-content');
+    if (!wrap) return;
+
+    const cats = { electric: [], electronic: [], automation: [] };
+    Object.entries(CALC_DEFS).forEach(([key, def]) => {
+      if (cats[def.category]) cats[def.category].push({ key, ...def });
     });
-  }
 
-  function load() { bindEvents(); render(); }
-
-  function render() {
-    const container = document.getElementById("calculations-container");
-    if (!container) return;
-    const map = {
-      cable:       renderCableLayout,
-      motor:       renderMotorLayout,
-      breaker:     renderBreakerLayout,
-      transformer: renderTransformerLayout,
-      pneumatic:   renderPneumaticLayout,
-      signal:      renderSignalLayout,
-      powerfactor: renderPowerFactorLayout,
-    };
-    (map[activeTab] || renderCableLayout)(container);
-  }
-
-  // ─────────────────────────────────────────────
-  // YARDIMCI: sonuç kartı HTML'i
-  // ─────────────────────────────────────────────
-  function resultPanel(mainLabel, mainVal, mainUnit, badgeClass, badgeText, infoHtml, rowsHtml) {
-    const colors = { success:"#137333", warning:"#B06000", danger:"#C5221F", info:"var(--primary)" };
-    const bgColors = { success:"#E6F4EA", warning:"#FEF7E0", danger:"#FCE8E6", info:"#EEF2FF" };
-    const c = colors[badgeClass] || colors.info;
-    const bg = bgColors[badgeClass] || bgColors.info;
-    return `
-      <div class="calc-result-panel">
-        <div class="calc-result-hdr">${mainLabel}</div>
-        <div class="calc-main-val" style="color:${c}">${mainVal} <small>${mainUnit}</small></div>
-        ${badgeText ? `<div><span class="calc-badge ${badgeClass}">${badgeText}</span></div>` : ""}
-        ${infoHtml ? `<div class="calc-info-card" style="border-left-color:${c};background:${bg};color:${c}">${infoHtml}</div>` : ""}
-        ${rowsHtml ? `<div class="calc-data-list">${rowsHtml}</div>` : ""}
-      </div>`;
-  }
-
-  function dataRow(label, val, highlight) {
-    return `<div class="calc-data-row" ${highlight ? 'style="background:rgba(79,110,247,.08);padding:8px;border-radius:6px"' : ""}>
-      <span ${highlight ? 'style="color:var(--primary);font-weight:bold"' : ""}>${label}</span>
-      <span ${highlight ? 'style="color:var(--primary);font-weight:bold"' : ""}>${val}</span>
-    </div>`;
-  }
-
-  // ═══════════════════════════════════════════════════
-  // 1. KABLO GERİLİM DÜŞÜMÜ
-  // ═══════════════════════════════════════════════════
-  function renderCableLayout(container) {
-    container.innerHTML = `
+    wrap.innerHTML = `
       <div class="calc-layout">
-        <div class="calc-card">
-          <h3>⚡ Giriş Parametreleri</h3>
-          <div class="calc-grid">
-            <div class="calc-row"><label>Bağlantı Tipi</label>
-              <select id="cb-phase">
-                <option value="3">3 Fazlı AC (380 V)</option>
-                <option value="1">1 Fazlı AC (220 V)</option>
-              </select></div>
-            <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-              <div class="calc-row"><label>Kurulu Güç (kW)</label><input type="number" id="cb-power" value="15" min="0.1" step="0.1"/></div>
-              <div class="calc-row"><label>Kablo Uzunluğu (m)</label><input type="number" id="cb-length" value="80" min="1"/></div>
+        <aside class="calc-sidebar">
+          ${Object.entries(cats).map(([cat, items]) => `
+            <div class="calc-cat-group">
+              <div class="calc-cat-header">${CAT_LABELS[cat] || cat}</div>
+              ${items.map(item => `
+                <button class="calc-item-btn" data-key="${item.key}" onclick="Calculations.selectCalc('${item.key}')">
+                  ${UI.esc(item.label)}
+                </button>
+              `).join('')}
             </div>
-            <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-              <div class="calc-row"><label>İletken Malzeme</label>
-                <select id="cb-conductor"><option value="Cu">Bakır (Cu)</option><option value="Al">Alüminyum (Al)</option></select></div>
-              <div class="calc-row"><label>Kablo Kesiti (mm²)</label>
-                <select id="cb-section">${KESITLER.map(k=>`<option value="${k}" ${k===6?"selected":""}>${k} mm²</option>`).join("")}</select></div>
-            </div>
-            <div class="calc-row"><label>Güç Faktörü (cos φ)</label><input type="number" id="cb-cos" value="0.85" min="0.5" max="1" step="0.01"/></div>
+          `).join('')}
+        </aside>
+        <main id="calc-main" class="calc-main">
+          <div class="calc-welcome">
+            <p>Sol taraftan bir hesaplama seçin.</p>
           </div>
-        </div>
-        <div class="calc-card"><h3>📊 Sonuçlar</h3><div id="cb-results"></div></div>
-      </div>`;
-    ["cb-phase","cb-power","cb-length","cb-conductor","cb-section","cb-cos"].forEach(id => {
-      document.getElementById(id).addEventListener("input", calcCable);
-      document.getElementById(id).addEventListener("change", calcCable);
-    });
-    calcCable();
+        </main>
+      </div>
+    `;
   }
 
-  function calcCable() {
-    const phase = parseInt(document.getElementById("cb-phase").value);
-    const power = parseFloat(document.getElementById("cb-power").value) || 0;
-    const length = parseFloat(document.getElementById("cb-length").value) || 0;
-    const conductor = document.getElementById("cb-conductor").value;
-    const section = parseFloat(document.getElementById("cb-section").value);
-    const cos = parseFloat(document.getElementById("cb-cos").value) || 0.85;
-    const k = conductor === "Cu" ? 56 : 35;
-    const U = phase === 3 ? 380 : 220;
-    const current = phase === 3
-      ? (power * 1000) / (Math.sqrt(3) * U * cos)
-      : (power * 1000) / (U * cos);
-    const pctDrop = phase === 3
-      ? (100 * length * power * 1000) / (k * section * U * U)
-      : (200 * length * power * 1000) / (k * section * U * U);
-    const nomCap = AKIM_KAPASITESI[conductor][section] || 0;
-    const exceeded = current > nomCap;
-    const cls = (pctDrop > 5 || exceeded) ? "danger" : pctDrop > 3 ? "warning" : "success";
-    const lbl = cls === "success" ? "Güvenli" : cls === "warning" ? "Kritik Sınırda" : "Limit Aşımı";
-    const info = exceeded
-      ? `Kablo kapasitesi (${nomCap} A) yetersiz! Mevcut akım: ${current.toFixed(1)} A — yangın riski.`
-      : cls === "success"
-        ? `Gerilim düşümü standart sınır (%3.0) altındadır. Seçilen kesit uygundur.`
-        : cls === "warning"
-          ? `%3 sınırı aşıldı, %5 motor kalkış limitine yakın. Daha büyük kesit önerilir.`
-          : `Gerilim düşümü (%${pctDrop.toFixed(2)}) izin verilen %5 limitini aşıyor!`;
+  function selectCalc(key) {
+    _currentCalc = key;
+    const def = CALC_DEFS[key];
+    if (!def) return;
 
-    let recSec = "Bulunamadı";
-    for (const sec of KESITLER) {
-      if (current > (AKIM_KAPASITESI[conductor][sec] || 0)) continue;
-      const drop = phase === 3
-        ? (100 * length * power * 1000) / (k * sec * U * U)
-        : (200 * length * power * 1000) / (k * sec * U * U);
-      if (drop <= 3.0) { recSec = `${sec} mm²`; break; }
+    // Sidebar aktif item
+    document.querySelectorAll('.calc-item-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+
+    const main = document.getElementById('calc-main');
+    if (!main) return;
+
+    const allFields = [...(def.fields || []), ...(def.fields_extra || [])];
+
+    const fieldsHtml = allFields.map(f => {
+      const val = f.default != null ? f.default : '';
+      if (f.type === 'select') {
+        return `
+          <div class="calc-field-row">
+            <label>${UI.esc(f.label)}</label>
+            <select name="${f.key}">
+              ${f.options.map(o => `<option value="${o}" ${o === f.default ? 'selected' : ''}>${o}</option>`).join('')}
+            </select>
+          </div>`;
+      }
+      if (f.type === 'textarea') {
+        return `
+          <div class="calc-field-row calc-field-wide">
+            <label>${UI.esc(f.label)}</label>
+            <textarea name="${f.key}" rows="3">${val}</textarea>
+          </div>`;
+      }
+      if (f.type === 'text') {
+        return `
+          <div class="calc-field-row">
+            <label>${UI.esc(f.label)}${f.unit ? ` <span class="calc-unit">(${f.unit})</span>` : ''}</label>
+            <input type="text" name="${f.key}" value="${UI.esc(String(val))}" ${f.required ? 'required' : ''}>
+          </div>`;
+      }
+      return `
+        <div class="calc-field-row">
+          <label>${UI.esc(f.label)}${f.unit ? ` <span class="calc-unit">(${f.unit})</span>` : ''}</label>
+          <input type="number" name="${f.key}" value="${val !== '' ? val : ''}" step="any" ${f.required ? 'required' : ''}>
+        </div>`;
+    }).join('');
+
+    main.innerHTML = `
+      <div class="calc-panel">
+        <div class="calc-panel-header">
+          <h3>${UI.esc(def.label)}</h3>
+          ${def.standard ? `<span class="calc-standard">${UI.esc(def.standard)}</span>` : ''}
+          ${def.note ? `<p class="calc-note">ℹ️ ${UI.esc(def.note)}</p>` : ''}
+        </div>
+        <form id="calc-form" onsubmit="return false">
+          <div class="calc-fields">${fieldsHtml}</div>
+          <div class="calc-actions">
+            <button class="btn btn-primary" onclick="Calculations.runCalc()">Hesapla</button>
+            <button class="btn btn-secondary" onclick="Calculations.saveCalc()">Kaydet</button>
+          </div>
+        </form>
+        <div id="calc-result"></div>
+      </div>
+    `;
+  }
+
+  async function runCalc() {
+    if (!_currentCalc) return;
+    const def = CALC_DEFS[_currentCalc];
+    const form = document.getElementById('calc-form');
+    if (!form) return;
+
+    const inputs = {};
+    const allFields = [...(def.fields || []), ...(def.fields_extra || [])];
+    for (const f of allFields) {
+      const el = form.querySelector(`[name="${f.key}"]`);
+      if (!el || el.value === '' || el.value === 'null') continue;
+      if (f.key === 'loads_json') {
+        try { inputs['loads'] = JSON.parse(el.value); } catch (e) { /* ignore parse error */ }
+        continue;
+      }
+      if (f.key === 'resistors_csv') {
+        inputs['resistors'] = el.value.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+        continue;
+      }
+      if (f.type === 'select' || f.type === 'textarea' || f.type === 'text') {
+        inputs[f.key] = el.value;
+      } else {
+        const n = parseFloat(el.value);
+        if (!isNaN(n)) inputs[f.key] = n;
+      }
     }
-    const box = document.getElementById("cb-results");
-    if (!box) return;
-    box.innerHTML = resultPanel(
-      "Gerilim Düşümü Oranı", `% ${pctDrop.toFixed(2)}`, "", cls, lbl, info,
-      dataRow("Çekilen Akım", `${current.toFixed(1)} A`, false) +
-      dataRow("Kablo Kapasitesi", `${nomCap} A`, false) +
-      dataRow("Maks. İzin Verilen", "% 3.0", false) +
-      dataRow("Önerilen Min. Kesit", recSec, true)
-    );
-  }
 
-  // ═══════════════════════════════════════════════════
-  // 2. MOTOR GÜÇ & TORK
-  // ═══════════════════════════════════════════════════
-  function renderMotorLayout(container) {
-    container.innerHTML = `
-      <div class="calc-layout">
-        <div class="calc-card">
-          <h3>⚙️ Motor Parametreleri</h3>
-          <div class="calc-tab-nav" style="margin-bottom:18px">
-            <button class="calc-mode-btn ${activeMotorMode==="torque"?"active":""}" data-mode="torque">Nm → kW</button>
-            <button class="calc-mode-btn ${activeMotorMode==="power"?"active":""}" data-mode="power" style="margin-left:4px">kW → Nm</button>
-            <button class="calc-mode-btn ${activeMotorMode==="conveyor"?"active":""}" data-mode="conveyor" style="margin-left:4px">Konveyör Gücü</button>
-          </div>
-          <div id="motor-inputs" class="calc-grid"></div>
-        </div>
-        <div class="calc-card"><h3>📊 Sonuçlar</h3><div id="motor-results"></div></div>
-      </div>`;
-    document.querySelectorAll(".calc-mode-btn").forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll(".calc-mode-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        activeMotorMode = btn.dataset.mode;
-        renderMotorInputs();
-      };
-    });
-    renderMotorInputs();
-  }
+    const resultDiv = document.getElementById('calc-result');
+    resultDiv.innerHTML = '<p class="muted" style="padding:12px">Hesaplanıyor…</p>';
 
-  function renderMotorInputs() {
-    const box = document.getElementById("motor-inputs");
-    if (!box) return;
-    if (activeMotorMode === "torque") {
-      box.innerHTML = `
-        <div class="calc-row"><label>Mil Torku (Nm)</label><input type="number" id="m-torque" value="50" min="0.1" step="0.1"/></div>
-        <div class="calc-row"><label>Motor Devri (RPM)</label><input type="number" id="m-speed" value="1450" min="10"/></div>`;
-      ["m-torque","m-speed"].forEach(id => document.getElementById(id).addEventListener("input", calcMotorTorqueToPower));
-      calcMotorTorqueToPower();
-    } else if (activeMotorMode === "power") {
-      box.innerHTML = `
-        <div class="calc-row"><label>Nominal Güç (kW)</label><input type="number" id="m-power" value="15" min="0.1" step="0.1"/></div>
-        <div class="calc-row"><label>Motor Devri (RPM)</label><input type="number" id="m-speed" value="1450" min="10"/></div>`;
-      ["m-power","m-speed"].forEach(id => document.getElementById(id).addEventListener("input", calcMotorPowerToTorque));
-      calcMotorPowerToTorque();
-    } else {
-      box.innerHTML = `
-        <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-          <div class="calc-row"><label>Yük Kütlesi (kg)</label><input type="number" id="mc-weight" value="250" min="1"/></div>
-          <div class="calc-row"><label>Konveyör Hızı (m/s)</label><input type="number" id="mc-speed" value="0.5" min="0.05" step="0.05"/></div>
-        </div>
-        <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-          <div class="calc-row"><label>Sürtünme Katsayısı (μ)</label><input type="number" id="mc-friction" value="0.15" min="0.01" step="0.01"/></div>
-          <div class="calc-row"><label>Eğim Açısı (°)</label><input type="number" id="mc-angle" value="0" min="0" max="85"/></div>
-        </div>
-        <div class="calc-row"><label>Mekanik Verimlilik (η)</label><input type="number" id="mc-efficiency" value="0.8" min="0.1" max="1" step="0.05"/></div>`;
-      ["mc-weight","mc-speed","mc-friction","mc-angle","mc-efficiency"].forEach(id =>
-        document.getElementById(id).addEventListener("input", calcConveyorPower));
-      calcConveyorPower();
+    try {
+      const data = await API.post('/calculations/run', { calc_type: _currentCalc, inputs });
+      _lastResult = data;
+      _renderResult(data, def);
+    } catch (e) {
+      resultDiv.innerHTML = `<p class="error-state" style="padding:12px;color:#c5221f">Hata: ${UI.esc(e.message || JSON.stringify(e))}</p>`;
     }
   }
 
-  function calcMotorTorqueToPower() {
-    const torque = parseFloat(document.getElementById("m-torque").value) || 0;
-    const speed  = parseFloat(document.getElementById("m-speed").value)  || 1;
-    const kw = (torque * speed) / 9550;
-    const hp = kw * 1.341;
-    const box = document.getElementById("motor-results");
-    if (!box) return;
-    box.innerHTML = resultPanel(
-      "Gereken Motor Gücü", kw.toFixed(2), "kW", "info", "",
-      `<strong>P = (T × n) / 9550</strong><br>${torque} Nm torkta ${speed} RPM için en az <strong>${kw.toFixed(2)} kW</strong> motor.`,
-      dataRow("Beygir Gücü", `${hp.toFixed(2)} HP`, false)
-    );
+  function _renderResult(data, def) {
+    const resultDiv = document.getElementById('calc-result');
+    if (!resultDiv) return;
+    const result = data.result || {};
+    const warnings = data.warnings || [];
+
+    const rows = (def.resultKeys || Object.keys(result))
+      .filter(k => result[k] != null)
+      .map(k => {
+        const label = (def.resultLabels || {})[k] || k;
+        let val = result[k];
+        if (typeof val === 'number') val = val.toLocaleString('tr-TR', { maximumFractionDigits: 4 });
+        return `<tr><td class="calc-res-label">${UI.esc(label)}</td><td class="calc-res-val"><strong>${UI.esc(String(val))}</strong></td></tr>`;
+      }).join('');
+
+    const warnHtml = warnings.length
+      ? `<div class="calc-warnings">${warnings.map(w => `<div class="calc-warn-item">⚠️ ${UI.esc(w)}</div>`).join('')}</div>`
+      : '';
+
+    resultDiv.innerHTML = `
+      <div class="calc-result-box">
+        <h4>Sonuçlar</h4>
+        ${warnHtml}
+        <table class="calc-result-table"><tbody>${rows}</tbody></table>
+      </div>
+    `;
   }
 
-  function calcMotorPowerToTorque() {
-    const power = parseFloat(document.getElementById("m-power").value) || 0;
-    const speed = parseFloat(document.getElementById("m-speed").value) || 1;
-    const torque = (9550 * power) / speed;
-    const box = document.getElementById("motor-results");
-    if (!box) return;
-    box.innerHTML = resultPanel(
-      "Nominal Şaft Torku", torque.toFixed(1), "Nm", "info", "",
-      `<strong>T = (9550 × P) / n</strong><br>${power} kW, ${speed} RPM → şaftta <strong>${torque.toFixed(1)} Nm</strong> sürekli tork.`,
-      ""
-    );
-  }
-
-  function calcConveyorPower() {
-    const weight = parseFloat(document.getElementById("mc-weight").value) || 0;
-    const speed  = parseFloat(document.getElementById("mc-speed").value)  || 0;
-    const friction   = parseFloat(document.getElementById("mc-friction").value)   || 0;
-    const angle      = parseFloat(document.getElementById("mc-angle").value)      || 0;
-    const efficiency = parseFloat(document.getElementById("mc-efficiency").value) || 0.8;
-    const g = 9.81;
-    const rad = angle * Math.PI / 180;
-    const Fg = weight * g * Math.sin(rad);
-    const Ff = weight * g * Math.cos(rad) * friction;
-    const Fn = Fg + Ff;
-    const kw = (Fn * speed) / (efficiency * 1000);
-    const hp = kw * 1.341;
-    const box = document.getElementById("motor-results");
-    if (!box) return;
-    box.innerHTML = resultPanel(
-      "Gereken Konveyör Gücü", kw.toFixed(2), "kW", "info", "",
-      `${weight} kg yükü ${angle}° eğimde μ=${friction} sürtünme katsayısıyla ${speed} m/s hızla hareket ettirmek için <strong>${kw.toFixed(2)} kW</strong> motor.`,
-      dataRow("Sürtünme Kuvveti", `${Ff.toFixed(1)} N`, false) +
-      dataRow("Eğim Kuvveti", `${Fg.toFixed(1)} N`, false) +
-      dataRow("Toplam Kuvvet", `${Fn.toFixed(1)} N`, false) +
-      dataRow("Beygir Gücü", `${hp.toFixed(2)} HP`, false)
-    );
-  }
-
-  // ═══════════════════════════════════════════════════
-  // 3. SİGORTA & KESİCİ SEÇİMİ
-  // ═══════════════════════════════════════════════════
-  function renderBreakerLayout(container) {
-    container.innerHTML = `
-      <div class="calc-layout">
-        <div class="calc-card">
-          <h3>🔌 Giriş Parametreleri</h3>
-          <div class="calc-grid">
-            <div class="calc-row"><label>Bağlantı Tipi</label>
-              <select id="br-phase">
-                <option value="3">3 Fazlı (380 V)</option>
-                <option value="1">1 Fazlı (220 V)</option>
-              </select></div>
-            <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-              <div class="calc-row"><label>Motor Gücü (kW)</label><input type="number" id="br-power" value="11" min="0.1" step="0.1"/></div>
-              <div class="calc-row"><label>Güç Faktörü (cos φ)</label><input type="number" id="br-cos" value="0.85" min="0.5" max="1" step="0.01"/></div>
-            </div>
-            <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-              <div class="calc-row"><label>Motor Verimi (η)</label><input type="number" id="br-eta" value="0.92" min="0.5" max="1" step="0.01"/></div>
-              <div class="calc-row"><label>Kalkış Akım Çarpanı (Ia/In)</label><input type="number" id="br-ia" value="6" min="3" max="12" step="0.5"/></div>
-            </div>
-            <div class="calc-row"><label>Sigorta Tipi</label>
-              <select id="br-fusetype">
-                <option value="gG">gG — Genel Amaçlı (Kablo & Motor Koruması)</option>
-                <option value="aM">aM — Motor Koruması (Yalnız Kısa Devre)</option>
-              </select></div>
-          </div>
-        </div>
-        <div class="calc-card"><h3>📊 Sonuçlar</h3><div id="br-results"></div></div>
-      </div>`;
-    ["br-phase","br-power","br-cos","br-eta","br-ia","br-fusetype"].forEach(id => {
-      document.getElementById(id).addEventListener("input", calcBreaker);
-      document.getElementById(id).addEventListener("change", calcBreaker);
-    });
-    calcBreaker();
-  }
-
-  function calcBreaker() {
-    const phase = parseInt(document.getElementById("br-phase").value);
-    const power = parseFloat(document.getElementById("br-power").value) || 0;
-    const cos   = parseFloat(document.getElementById("br-cos").value)   || 0.85;
-    const eta   = parseFloat(document.getElementById("br-eta").value)   || 0.92;
-    const iaRatio = parseFloat(document.getElementById("br-ia").value)  || 6;
-    const fuseType = document.getElementById("br-fusetype").value;
-    const U = phase === 3 ? 380 : 220;
-
-    // Nominal akım
-    const In = phase === 3
-      ? (power * 1000) / (Math.sqrt(3) * U * cos * eta)
-      : (power * 1000) / (U * cos * eta);
-    const Ia = In * iaRatio;
-
-    // Sigorta: gG 1.25*In; aM kalkış akımına dayanıklı → 2.5*In tipik seçim
-    const fuseMult = fuseType === "gG" ? 1.25 : 2.0;
-    const fuseMin = In * fuseMult;
-    const fuseVal = SIGORTA_SERISI.find(v => v >= fuseMin) || SIGORTA_SERISI[SIGORTA_SERISI.length-1];
-
-    // Motor koruma şalterleri (MMS) — In'e en yakın standart değer
-    const mmsVal = MMS_DEGERLERI.find(v => v >= In) || MMS_DEGERLERI[MMS_DEGERLERI.length-1];
-
-    // Önerilen kablo kesiti (havada bakır)
-    const recSec = KESITLER.find(s => (AKIM_KAPASITESI.Cu[s]||0) >= In * 1.25) || 240;
-
-    const box = document.getElementById("br-results");
-    if (!box) return;
-    box.innerHTML = resultPanel(
-      "Nominal Motor Akımı", In.toFixed(2), "A", "info", "",
-      `IEC 60947-4 uyarınca hesaplanmış motor akımı. Kalkış akımı (${iaRatio}×In) = <strong>${Ia.toFixed(1)} A</strong>.`,
-      dataRow("Kalkış Akımı (Ia)", `${Ia.toFixed(1)} A`, false) +
-      dataRow(`Sigorta (${fuseType}) — Min. ${fuseMin.toFixed(1)} A`, `▶ ${fuseVal} A seç`, true) +
-      dataRow("Motor Koruma Şalteri (MMS)", `▶ ${mmsVal} A ayarla`, true) +
-      dataRow("Önerilen Min. Kablo Kesiti", `${recSec} mm² Cu`, false)
-    );
-  }
-
-  // ═══════════════════════════════════════════════════
-  // 4. TRANSFORMATÖR YÜK HESABI
-  // ═══════════════════════════════════════════════════
-  function renderTransformerLayout(container) {
-    container.innerHTML = `
-      <div class="calc-layout">
-        <div class="calc-card">
-          <h3>🏭 Giriş Parametreleri</h3>
-          <div class="calc-grid">
-            <div class="calc-row"><label>Toplam Kurulu Güç (kW)</label><input type="number" id="tr-pkw" value="120" min="1" step="1"/></div>
-            <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-              <div class="calc-row"><label>Eş Zamanlılık Katsayısı (Ks)</label><input type="number" id="tr-ks" value="0.75" min="0.1" max="1" step="0.05"/></div>
-              <div class="calc-row"><label>Talep Katsayısı (Kd)</label><input type="number" id="tr-kd" value="0.85" min="0.1" max="1" step="0.05"/></div>
-            </div>
-            <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-              <div class="calc-row"><label>Ortalama Güç Faktörü (cos φ)</label><input type="number" id="tr-cos" value="0.85" min="0.5" max="1" step="0.01"/></div>
-              <div class="calc-row"><label>Trafo Yükleme Oranı (%)</label><input type="number" id="tr-load" value="80" min="50" max="100" step="5"/></div>
-            </div>
-          </div>
-          <p class="muted" style="font-size:12px;margin-top:8px">Ks: aynı anda çalışan yük oranı. Kd: nominal gücün kullanım oranı.</p>
-        </div>
-        <div class="calc-card"><h3>📊 Sonuçlar</h3><div id="tr-results"></div></div>
-      </div>`;
-    ["tr-pkw","tr-ks","tr-kd","tr-cos","tr-load"].forEach(id => {
-      document.getElementById(id).addEventListener("input", calcTransformer);
-    });
-    calcTransformer();
-  }
-
-  function calcTransformer() {
-    const pkw  = parseFloat(document.getElementById("tr-pkw").value)  || 0;
-    const ks   = parseFloat(document.getElementById("tr-ks").value)   || 0.75;
-    const kd   = parseFloat(document.getElementById("tr-kd").value)   || 0.85;
-    const cos  = parseFloat(document.getElementById("tr-cos").value)  || 0.85;
-    const load = parseFloat(document.getElementById("tr-load").value) || 80;
-
-    const activeKw  = pkw * ks * kd;                // Talep edilen aktif güç
-    const sin_phi   = Math.sqrt(1 - cos * cos);
-    const reactKvar = activeKw * (sin_phi / cos);   // Reaktif güç
-    const apparentKva = activeKw / cos;             // Görünen güç (S = P/cosφ)
-    const minTrafoKva = apparentKva / (load / 100); // %80 yükte gereken trafo kapasitesi
-
-    // Standart trafo kapasiteleri (kVA)
-    const TRAFO_SERISI = [25,50,100,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500];
-    const secTrafo = TRAFO_SERISI.find(v => v >= minTrafoKva) || TRAFO_SERISI[TRAFO_SERISI.length-1];
-
-    const box = document.getElementById("tr-results");
-    if (!box) return;
-    box.innerHTML = resultPanel(
-      "Gereken Min. Trafo Kapasitesi", minTrafoKva.toFixed(0), "kVA", "info", "",
-      `%${load} yükleme oranında <strong>${minTrafoKva.toFixed(0)} kVA</strong> görünen güç kapasitesi gerekli.`,
-      dataRow("Talep Aktif Güç (P)", `${activeKw.toFixed(1)} kW`, false) +
-      dataRow("Reaktif Güç (Q)", `${reactKvar.toFixed(1)} kVAR`, false) +
-      dataRow("Görünen Güç (S)", `${apparentKva.toFixed(1)} kVA`, false) +
-      dataRow(`Standart Trafo Seçimi (%${load} yük)`, `▶ ${secTrafo} kVA`, true)
-    );
-  }
-
-  // ═══════════════════════════════════════════════════
-  // 5. PNÖMATİK SİLİNDİR KUVVETİ
-  // ═══════════════════════════════════════════════════
-  function renderPneumaticLayout(container) {
-    container.innerHTML = `
-      <div class="calc-layout">
-        <div class="calc-card">
-          <h3>💨 Giriş Parametreleri</h3>
-          <div class="calc-grid">
-            <div class="calc-row"><label>Silindir Tipi</label>
-              <select id="pn-type">
-                <option value="double">Çift Etkili</option>
-                <option value="single">Tek Etkili</option>
-              </select></div>
-            <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-              <div class="calc-row"><label>Piston Çapı — D (mm)</label><input type="number" id="pn-d" value="80" min="8" step="1"/></div>
-              <div class="calc-row"><label>Şaft Çapı — d (mm)</label><input type="number" id="pn-d2" value="20" min="4" step="1"/></div>
-            </div>
-            <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-              <div class="calc-row"><label>Çalışma Basıncı (bar)</label><input type="number" id="pn-p" value="6" min="1" max="16" step="0.5"/></div>
-              <div class="calc-row"><label>Mekanik Verim (η)</label><input type="number" id="pn-eta" value="0.9" min="0.5" max="1" step="0.01"/></div>
-            </div>
-            <div class="calc-row"><label>Strok / Kursu (mm)</label><input type="number" id="pn-stroke" value="150" min="10" step="10"/></div>
-          </div>
-        </div>
-        <div class="calc-card"><h3>📊 Sonuçlar</h3><div id="pn-results"></div></div>
-      </div>`;
-    ["pn-type","pn-d","pn-d2","pn-p","pn-eta","pn-stroke"].forEach(id => {
-      document.getElementById(id).addEventListener("input", calcPneumatic);
-      document.getElementById(id).addEventListener("change", calcPneumatic);
-    });
-    calcPneumatic();
-  }
-
-  function calcPneumatic() {
-    const type   = document.getElementById("pn-type").value;
-    const D      = parseFloat(document.getElementById("pn-d").value)      || 80;
-    const d      = parseFloat(document.getElementById("pn-d2").value)     || 20;
-    const p      = parseFloat(document.getElementById("pn-p").value)      || 6;
-    const eta    = parseFloat(document.getElementById("pn-eta").value)    || 0.9;
-    const stroke = parseFloat(document.getElementById("pn-stroke").value) || 150;
-
-    const pPa = p * 1e5; // bar → Pa
-    const A1  = Math.PI * (D / 1000) ** 2 / 4; // Piston alanı (m²)
-    const A2  = Math.PI * ((D / 1000) ** 2 - (d / 1000) ** 2) / 4; // Geri çekme alanı
-
-    const F_ileri  = A1 * pPa * eta;
-    const F_geri   = type === "double" ? A2 * pPa * eta : 0;
-
-    // Hava tüketimi (litre/strok)
-    const V1 = A1 * (stroke / 1000) * 1000; // litre
-    const V2 = type === "double" ? A2 * (stroke / 1000) * 1000 : 0;
-    const Vtotal = (V1 + V2) * (p + 1); // atmosfere normalize (basınçta hava)
-
-    const box = document.getElementById("pn-results");
-    if (!box) return;
-    box.innerHTML = resultPanel(
-      "İleri Yön Kuvveti (İtme)", (F_ileri / 1000).toFixed(2), "kN",
-      "info", "",
-      `Piston alanı A₁ = ${(A1 * 1e4).toFixed(2)} cm² · ${p} bar basınçta η=${eta} verimle <strong>${(F_ileri/1000).toFixed(2)} kN (${(F_ileri/9.81).toFixed(0)} kgf)</strong> itme kuvveti.`,
-      dataRow("İtme Kuvveti", `${(F_ileri/1000).toFixed(2)} kN  (${(F_ileri/9.81).toFixed(0)} kgf)`, true) +
-      (type === "double"
-        ? dataRow("Geri Çekme Kuvveti", `${(F_geri/1000).toFixed(2)} kN  (${(F_geri/9.81).toFixed(0)} kgf)`, false)
-        : dataRow("Geri Çekme", "Yay (kuvvet yok)", false)) +
-      dataRow("Piston Alanı A₁", `${(A1*1e4).toFixed(2)} cm²`, false) +
-      (type === "double" ? dataRow("Geri Çekme Alanı A₂", `${(A2*1e4).toFixed(2)} cm²`, false) : "") +
-      dataRow("Strok Hava Tüketimi", `${Vtotal.toFixed(2)} L/strok (norm)`, false)
-    );
-  }
-
-  // ═══════════════════════════════════════════════════
-  // 6. 4–20 mA SİNYAL ÖLÇEKLEMESİ
-  // ═══════════════════════════════════════════════════
-  function renderSignalLayout(container) {
-    container.innerHTML = `
-      <div class="calc-layout">
-        <div class="calc-card">
-          <h3>📡 Sinyal Parametreleri</h3>
-          <div class="calc-grid">
-            <div class="calc-row"><label>Hesaplama Yönü</label>
-              <select id="sg-dir">
-                <option value="ma2val">mA → Ölçüm Değeri</option>
-                <option value="val2ma">Ölçüm Değeri → mA</option>
-              </select></div>
-            <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-              <div class="calc-row"><label>Ölçüm Aralığı Alt (PV_min)</label><input type="number" id="sg-min" value="0" step="any"/></div>
-              <div class="calc-row"><label>Ölçüm Aralığı Üst (PV_max)</label><input type="number" id="sg-max" value="100" step="any"/></div>
-            </div>
-            <div class="calc-row"><label>Ölçüm Birimi</label>
-              <select id="sg-unit">
-                <option>°C</option><option>bar</option><option>Pa</option><option>m³/h</option>
-                <option>L/min</option><option>mm</option><option>m/s</option><option>%</option><option>rpm</option>
-              </select></div>
-            <div class="calc-row"><label id="sg-input-lbl">Mevcut Akım (mA)</label>
-              <input type="number" id="sg-value" value="12" step="any"/></div>
-          </div>
-        </div>
-        <div class="calc-card"><h3>📊 Sonuçlar</h3><div id="sg-results"></div></div>
-      </div>`;
-    ["sg-dir","sg-min","sg-max","sg-unit","sg-value"].forEach(id => {
-      document.getElementById(id).addEventListener("input", calcSignal);
-      document.getElementById(id).addEventListener("change", calcSignal);
-    });
-    document.getElementById("sg-dir").addEventListener("change", () => {
-      const dir = document.getElementById("sg-dir").value;
-      document.getElementById("sg-input-lbl").textContent = dir === "ma2val" ? "Mevcut Akım (mA)" : "Ölçüm Değeri";
-      document.getElementById("sg-value").value = dir === "ma2val" ? "12" : "50";
-      calcSignal();
-    });
-    calcSignal();
-  }
-
-  function calcSignal() {
-    const dir   = document.getElementById("sg-dir").value;
-    const pvMin = parseFloat(document.getElementById("sg-min").value)   || 0;
-    const pvMax = parseFloat(document.getElementById("sg-max").value)   || 100;
-    const unit  = document.getElementById("sg-unit").value;
-    const val   = parseFloat(document.getElementById("sg-value").value) || 0;
-
-    const MA_MIN = 4, MA_MAX = 20, MA_SPAN = 16;
-    const PV_SPAN = pvMax - pvMin;
-
-    let pv, ma, pct;
-    if (dir === "ma2val") {
-      ma  = val;
-      pct = ((ma - MA_MIN) / MA_SPAN) * 100;
-      pv  = pvMin + (pct / 100) * PV_SPAN;
-    } else {
-      pv  = val;
-      pct = ((pv - pvMin) / PV_SPAN) * 100;
-      ma  = MA_MIN + (pct / 100) * MA_SPAN;
+  async function saveCalc() {
+    if (!_lastResult || !_currentCalc) {
+      alert('Önce hesaplama yapın.');
+      return;
     }
+    const def = CALC_DEFS[_currentCalc];
+    const title = prompt('Hesaplama adı:', def.label);
+    if (!title) return;
 
-    const okMa  = ma >= MA_MIN && ma <= MA_MAX;
-    const okPct = pct >= 0 && pct <= 100;
-    const cls   = (okMa && okPct) ? "success" : "danger";
-    const lbl   = (okMa && okPct) ? "Geçerli Aralık" : "Aralık Dışı!";
-
-    const box = document.getElementById("sg-results");
-    if (!box) return;
-
-    if (dir === "ma2val") {
-      box.innerHTML = resultPanel(
-        "Ölçüm Değeri", pv.toFixed(3), unit, cls, lbl,
-        `4 mA = ${pvMin} ${unit}, 20 mA = ${pvMax} ${unit} → <strong>${ma.toFixed(3)} mA</strong> sinyali <strong>${pv.toFixed(3)} ${unit}</strong> değerine karşılık gelir.`,
-        dataRow("Akım Değeri", `${ma.toFixed(3)} mA`, false) +
-        dataRow("Span Yüzdesi", `% ${pct.toFixed(2)}`, false) +
-        dataRow("Ham ADC (0–65535)", Math.round((pct/100)*65535).toString(), false)
-      );
-    } else {
-      box.innerHTML = resultPanel(
-        "Çıkış Akımı", ma.toFixed(3), "mA", cls, lbl,
-        `${pvMin}–${pvMax} ${unit} aralığında <strong>${pv.toFixed(3)} ${unit}</strong> değeri → <strong>${ma.toFixed(3)} mA</strong> sinyal çıkışı.`,
-        dataRow("Ölçüm Değeri", `${pv.toFixed(3)} ${unit}`, false) +
-        dataRow("Span Yüzdesi", `% ${pct.toFixed(2)}`, false) +
-        dataRow("PLC Ölçekleme (0–27648)", Math.round((pct/100)*27648).toString(), false)
-      );
+    try {
+      await API.post('/calculations/save', {
+        category: def.category,
+        calc_type: _currentCalc,
+        title,
+        inputs: _lastResult.inputs,
+        result: _lastResult.result,
+      });
+      alert('Kaydedildi!');
+    } catch (e) {
+      alert('Kaydetme hatası: ' + (e.message || ''));
     }
   }
 
-  // ═══════════════════════════════════════════════════
-  // 7. GÜÇ FAKTÖRÜ DÜZELTMESİ (KONDANSATÖr)
-  // ═══════════════════════════════════════════════════
-  function renderPowerFactorLayout(container) {
-    container.innerHTML = `
-      <div class="calc-layout">
-        <div class="calc-card">
-          <h3>⚡ Giriş Parametreleri</h3>
-          <div class="calc-grid">
-            <div class="calc-row"><label>Aktif Güç (kW)</label><input type="number" id="pf-kw" value="80" min="1" step="1"/></div>
-            <div class="calc-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-              <div class="calc-row"><label>Mevcut cos φ₁</label><input type="number" id="pf-cos1" value="0.72" min="0.3" max="0.99" step="0.01"/></div>
-              <div class="calc-row"><label>Hedef cos φ₂</label><input type="number" id="pf-cos2" value="0.95" min="0.5" max="1" step="0.01"/></div>
-            </div>
-            <div class="calc-row"><label>Şebeke Gerilimi (V)</label>
-              <select id="pf-volt">
-                <option value="380">380 V (3 Faz)</option>
-                <option value="400">400 V (3 Faz)</option>
-                <option value="6300">6.3 kV (Orta Gerilim)</option>
-              </select></div>
-          </div>
-        </div>
-        <div class="calc-card"><h3>📊 Sonuçlar</h3><div id="pf-results"></div></div>
-      </div>`;
-    ["pf-kw","pf-cos1","pf-cos2","pf-volt"].forEach(id => {
-      document.getElementById(id).addEventListener("input", calcPowerFactor);
-      document.getElementById(id).addEventListener("change", calcPowerFactor);
-    });
-    calcPowerFactor();
-  }
-
-  function calcPowerFactor() {
-    const kw   = parseFloat(document.getElementById("pf-kw").value)   || 0;
-    const cos1 = parseFloat(document.getElementById("pf-cos1").value) || 0.72;
-    const cos2 = parseFloat(document.getElementById("pf-cos2").value) || 0.95;
-
-    const tan1 = Math.tan(Math.acos(cos1));
-    const tan2 = Math.tan(Math.acos(cos2));
-    const Qc   = kw * (tan1 - tan2);  // kVAR
-
-    const S1 = kw / cos1;
-    const S2 = kw / cos2;
-    const I_azalma_pct = ((S1 - S2) / S1 * 100);
-
-    // Kayıp azalma (iletim kayıpları P_loss ~ I² ~ S²)
-    const kayip_azalma = (1 - (S2 / S1) ** 2) * 100;
-
-    const cls = Qc > 0 ? "success" : "warning";
-    const lbl = Qc > 0 ? "Kompanzasyon Gerekli" : "Hedef Zaten Sağlanıyor";
-
-    const box = document.getElementById("pf-results");
-    if (!box) return;
-    box.innerHTML = resultPanel(
-      "Gereken Kondansatör Gücü", Qc.toFixed(1), "kVAR", cls, lbl,
-      `cos φ'yi <strong>${cos1} → ${cos2}</strong>'ye yükseltmek için <strong>${Qc.toFixed(1)} kVAR</strong> kapasitif kompanzasyon uygulanmalıdır.`,
-      dataRow("Mevcut Görünen Güç S₁", `${S1.toFixed(1)} kVA`, false) +
-      dataRow("Hedef Görünen Güç S₂", `${S2.toFixed(1)} kVA`, false) +
-      dataRow("Akım Azalması", `% ${I_azalma_pct.toFixed(1)}`, false) +
-      dataRow("İletim Kaybı Azalması", `% ${kayip_azalma.toFixed(1)}`, false) +
-      dataRow("Kondansatör Gücü", `▶ ${Qc.toFixed(1)} kVAR`, true)
-    );
-  }
-
-  return { load };
+  return { load, selectCalc, runCalc, saveCalc };
 })();

@@ -7,7 +7,7 @@
   <title>Otomasyon Proje Takip</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=17" />
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=18" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 </head>
@@ -264,17 +264,11 @@
 
       <!-- ---------- HESAPLAMALAR SEKMESİ ---------- -->
       <section id="panel-calculations" class="panel">
-        <div class="panel-head"><h2>Mühendislik Hesaplamaları</h2></div>
-        <div class="calc-tab-nav">
-          <button class="calc-tab-btn active" data-calc-tab="cable">⚡ Kablo Gerilim Düşümü</button>
-          <button class="calc-tab-btn" data-calc-tab="motor">⚙️ Motor Güç &amp; Tork</button>
-          <button class="calc-tab-btn" data-calc-tab="breaker">🔌 Sigorta &amp; Kesici</button>
-          <button class="calc-tab-btn" data-calc-tab="transformer">🏭 Transformatör Yük</button>
-          <button class="calc-tab-btn" data-calc-tab="pneumatic">💨 Pnömatik Silindir</button>
-          <button class="calc-tab-btn" data-calc-tab="signal">📡 4-20mA Sinyal</button>
-          <button class="calc-tab-btn" data-calc-tab="powerfactor">⚡ Güç Faktörü</button>
+        <div class="section-header">
+          <h2>🧮 Mühendislik Hesaplamaları</h2>
+          <p style="color:#666;font-size:13px;margin:0">Elektrik · Elektronik · Otomasyon — IEC/TS EN standartlarına uygun</p>
         </div>
-        <div id="calculations-container"></div>
+        <div id="calc-content"></div>
       </section>
 
       <!-- ---------- MALİYET ANALİZİ SEKMESİ ---------- -->
@@ -398,7 +392,7 @@
   <script src="{% static 'js/specs.js' %}?v=2"></script>
   <script src="{% static 'js/skills.js' %}?v=2"></script>
   <script src="{% static 'js/tasks.js' %}?v=7"></script>
-  <script src="{% static 'js/calculations.js' %}?v=3"></script>
+  <script src="{% static 'js/calculations.js' %}?v=4"></script>
   <script src="{% static 'js/cost-analysis.js' %}?v=1"></script>
   <script src="{% static 'js/eplan.js' %}?v=1"></script>
   <script src="{% static 'js/flow.js' %}?v=2"></script>
@@ -411,6 +405,6 @@
   <script src="{% static 'js/payroll.js' %}?v=1"></script>
   <script src="{% static 'js/contractor.js' %}?v=1"></script>
   <script src="{% static 'js/ai_insights.js' %}?v=1"></script>
-  <script src="{% static 'js/app.js' %}?v=12"></script>
+  <script src="{% static 'js/app.js' %}?v=13"></script>
 </body>
 </html>
