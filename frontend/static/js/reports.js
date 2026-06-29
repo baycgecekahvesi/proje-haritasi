@@ -2,6 +2,7 @@
 const Reports = (() => {
   const charts = {};
   let activeTab = "genel";
+  let scurveChart = null;
 
   const STATUS_COLOR = {
     aktif: "#4f6ef7", beklemede: "#f39c12",
@@ -36,6 +37,11 @@ const Reports = (() => {
           <button class="rp-tab ${activeTab==="butce"?"active":""}"    data-rp="butce">💰 Bütçe</button>
           <button class="rp-tab ${activeTab==="zaman"?"active":""}"    data-rp="zaman">📅 Zaman & Gecikmeler</button>
           <button class="rp-tab ${activeTab==="gantt"?"active":""}"    data-rp="gantt">📐 Gantt</button>
+          <button class="rp-tab ${activeTab==="scurve"?"active":""}"  data-rp="scurve">📈 S-Eğrisi</button>
+        </div>
+        <div class="rp-export-bar">
+          <button class="btn btn-sm" id="rp-export-excel">⬇️ Excel İndir</button>
+          <button class="btn btn-sm" id="rp-export-pdf">⬇️ PDF İndir</button>
         </div>
         <div id="rp-body" class="rp-body"></div>
       </div>`;
@@ -48,6 +54,14 @@ const Reports = (() => {
       };
     });
 
+    document.getElementById("rp-export-excel").addEventListener("click", () => {
+      _downloadFile("/api/reports/export/excel", "projeler-ozet.xlsx", API.getToken());
+    });
+
+    document.getElementById("rp-export-pdf").addEventListener("click", () => {
+      _downloadFile("/api/reports/export/pdf", "projeler-ozet.pdf", API.getToken());
+    });
+
     _loadTab();
   }
 
@@ -57,6 +71,7 @@ const Reports = (() => {
     if (activeTab === "butce")  _renderButce();
     if (activeTab === "zaman")  _renderZaman();
     if (activeTab === "gantt")  _renderGantt();
+    if (activeTab === "scurve") _renderSCurve();
   }
 
   function _destroyAll() {
@@ -375,6 +390,76 @@ const Reports = (() => {
         <span><i style="background:#e74c3c"></i> Gecikmeli</span>
         <span><i style="background:rgba(0,0,0,.15);border:1px dashed #999"></i> Gerçekleşen</span>
       </div>`;
+  }
+
+  // ══════════════════════════════════════════════════════
+  // S-EĞRİSİ
+  // ══════════════════════════════════════════════════════
+  async function _renderSCurve() {
+    const body = document.getElementById("rp-body");
+    // Proje seçici
+    let projects = [];
+    try { const d = await API.get("/projects/?page=1"); projects = d.items || d; } catch { projects = []; }
+
+    body.innerHTML = `
+      <div class="rp-card wide">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <h3 style="margin:0">S-Eğrisi — Planlanan vs Gerçekleşen</h3>
+          <select id="sc-project-sel" style="flex:1;max-width:300px">
+            <option value="">— Proje seçin —</option>
+            ${projects.map(p => `<option value="${p.id}">${UI.esc(p.name)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="rp-chart-wrap tall"><canvas id="ch-scurve"></canvas></div>
+        <p id="sc-msg" class="muted" style="text-align:center;margin-top:8px">Proje seçin</p>
+      </div>
+    `;
+
+    document.getElementById("sc-project-sel").onchange = async (e) => {
+      const pid = e.target.value;
+      if (!pid) return;
+      const msg = document.getElementById("sc-msg");
+      msg.textContent = "Yükleniyor…";
+      try {
+        const data = await API.get(`/reports/projects/${pid}/s-curve`);
+        if (!data.length) { msg.textContent = "Bu proje için tarih verisi yok."; return; }
+        msg.textContent = "";
+        if (charts.scurve) { charts.scurve.destroy(); delete charts.scurve; }
+        charts.scurve = new Chart(document.getElementById("ch-scurve"), {
+          type: "line",
+          data: {
+            labels: data.map(d => d.week),
+            datasets: [
+              { label: "Planlanan %", data: data.map(d => d.planned_pct), borderColor: "#4f6ef7", backgroundColor: "rgba(79,110,247,.1)", tension: 0.4, fill: true, pointRadius: 3 },
+              { label: "Gerçekleşen %", data: data.map(d => d.actual_pct), borderColor: "#27ae60", backgroundColor: "rgba(39,174,96,.1)", tension: 0.4, fill: true, pointRadius: 3, spanGaps: false },
+            ],
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: "top", labels: { font: { size: 11 }, boxWidth: 12 } } },
+            scales: {
+              y: { beginAtZero: true, max: 100, title: { display: true, text: "İlerleme (%)" } },
+              x: { ticks: { maxRotation: 45, font: { size: 10 } } },
+            },
+          },
+        });
+      } catch (err) { msg.textContent = `Hata: ${UI.esc(err.message)}`; }
+    };
+  }
+
+  async function _downloadFile(url, filename, token) {
+    try {
+      const resp = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!resp.ok) { UI.toast("İndirme başarısız", "error"); return; }
+      const blob = await resp.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (_) { UI.toast("İndirme hatası", "error"); }
   }
 
   return { renderStatBar, renderCharts };

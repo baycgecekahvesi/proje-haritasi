@@ -238,6 +238,8 @@ const Tasks = (() => {
           <option value="low">Düşük</option><option value="medium" selected>Orta</option><option value="high">Yüksek</option>
         </select>
         <input type="date" name="due_date" style="width:auto" />
+        <input type="date" name="planned_start" placeholder="Plan Başl." style="width:auto" />
+        <input type="date" name="planned_end" placeholder="Plan Bitiş" style="width:auto" />
         <button class="btn btn-primary btn-sm" type="submit">+ Ekle</button>
       </form>` : ""}
     `;
@@ -251,6 +253,8 @@ const Tasks = (() => {
           assignee_id: fd.get("assignee_id") ? +fd.get("assignee_id") : null,
           priority: fd.get("priority"),
           due_date: fd.get("due_date") || null,
+          planned_start: fd.get("planned_start") || null,
+          planned_end: fd.get("planned_end") || null,
         });
         render(projectId, box, members);
       };
@@ -266,20 +270,40 @@ const Tasks = (() => {
           render(projectId, box, members);
         };
       });
+      box.querySelectorAll("[data-progress-task]").forEach((el) => {
+        el.addEventListener("click", async () => {
+          const taskId = el.dataset.progressTask;
+          const row = el.closest("[data-task-id]");
+          const currentPct = row ? (row.querySelector(".muted")?.textContent?.replace("%", "") || "0") : "0";
+          const val = prompt("Yeni ilerleme (0-100):", currentPct);
+          if (val === null) return;
+          const n = Math.min(100, Math.max(0, parseInt(val, 10) || 0));
+          await API.patch(`/projects/${projectId}/tasks/${taskId}/progress?progress=${n}`, {});
+          render(projectId, box, members);
+        });
+      });
     }
   }
 
   function rowHtml(t, editor) {
+    const progressColor = t.is_done ? "#27ae60" : "#4f6ef7";
     return `
-      <div class="row-item">
+      <div class="row-item${t.is_overdue && !t.is_done ? " task-overdue" : ""}" data-task-id="${t.id}">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           ${editor ? `<input type="checkbox" data-toggle="${t.id}" ${t.is_done ? "checked" : ""} />` : ""}
           <span style="${t.is_done ? "text-decoration:line-through;color:#95a5a6" : ""}">${UI.esc(t.title)}</span>
           <span class="pill" style="background:${PRIO_COLOR[t.priority]}22;color:${PRIO_COLOR[t.priority]}">${PRIO[t.priority]}</span>
+          <span class="muted" style="font-size:11px">%${t.progress || 0}</span>
+          ${t.is_overdue && !t.is_done ? `<span class="pill" style="background:#e74c3c22;color:#e74c3c">⏰ Gecikmiş</span>` : ""}
           ${t.assignee_username ? `<span class="pill">👤 ${UI.esc(t.assignee_username)}</span>` : ""}
           ${t.due_date ? `<span class="muted" style="font-size:12px">📅 ${UI.fmtDate(t.due_date)}</span>` : ""}
         </div>
-        ${editor ? `<button class="btn btn-sm btn-ghost" data-del-task="${t.id}">✕</button>` : ""}
+        <div class="task-progress-bar"><span style="width:${t.progress || 0}%;background:${progressColor}"></span></div>
+        ${editor ? `
+        <div style="display:flex;gap:4px;align-items:center">
+          <button class="btn btn-sm btn-ghost" data-progress-task="${t.id}" title="İlerleme güncelle">📊</button>
+          <button class="btn btn-sm btn-ghost" data-del-task="${t.id}">✕</button>
+        </div>` : ""}
       </div>`;
   }
 

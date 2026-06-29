@@ -138,6 +138,12 @@ class TaskIn(Schema):
     priority: str = "medium"
     is_done: bool = False
     due_date: Optional[date] = None
+    planned_start: Optional[date] = None
+    planned_end: Optional[date] = None
+    actual_start: Optional[date] = None
+    actual_end: Optional[date] = None
+    progress: int = 0
+    delay_reason: str = ""
 
 
 class TaskPatch(Schema):
@@ -147,6 +153,12 @@ class TaskPatch(Schema):
     priority: Optional[str] = None
     is_done: Optional[bool] = None
     due_date: Optional[date] = None
+    planned_start: Optional[date] = None
+    planned_end: Optional[date] = None
+    actual_start: Optional[date] = None
+    actual_end: Optional[date] = None
+    progress: Optional[int] = None
+    delay_reason: Optional[str] = None
 
 
 class TaskOut(Schema):
@@ -160,6 +172,13 @@ class TaskOut(Schema):
     priority_display: str
     is_done: bool
     due_date: Optional[date]
+    planned_start: Optional[date]
+    planned_end: Optional[date]
+    actual_start: Optional[date]
+    actual_end: Optional[date]
+    progress: int
+    delay_reason: str
+    is_overdue: bool
     created_at: datetime
 
     @staticmethod
@@ -169,3 +188,70 @@ class TaskOut(Schema):
     @staticmethod
     def resolve_assignee_username(obj) -> Optional[str]:
         return obj.assignee.username if obj.assignee_id and obj.assignee else None
+
+    @staticmethod
+    def resolve_is_overdue(obj) -> bool:
+        from datetime import date as d
+        if obj.due_date and not obj.is_done:
+            return d.today() > obj.due_date
+        return False
+
+
+# --------------------------------------------------------------------------- #
+# Görev Bağımlılığı
+# --------------------------------------------------------------------------- #
+class TaskDependencyIn(Schema):
+    depends_on_id: int
+    dep_type: str = "FS"
+
+
+class TaskDependencyOut(Schema):
+    id: int
+    task_id: int
+    depends_on_id: int
+    depends_on_title: str
+    dep_type: str
+
+    @staticmethod
+    def resolve_depends_on_title(obj) -> str:
+        return obj.depends_on.title
+
+
+# --------------------------------------------------------------------------- #
+# Gantt
+# --------------------------------------------------------------------------- #
+class TaskGanttOut(Schema):
+    id: int
+    title: str
+    project_id: int
+    project_name: str
+    assignee_username: Optional[str] = None
+    priority: str
+    is_done: bool
+    progress: int
+    planned_start: Optional[date]
+    planned_end: Optional[date]
+    actual_start: Optional[date]
+    actual_end: Optional[date]
+    due_date: Optional[date]
+    is_overdue: bool
+    dependency_ids: list[int]
+
+    @staticmethod
+    def resolve_is_overdue(obj) -> bool:
+        from datetime import date as d
+        if obj.due_date and not obj.is_done:
+            return d.today() > obj.due_date
+        return False
+
+    @staticmethod
+    def resolve_dependency_ids(obj) -> list[int]:
+        return list(obj.dependencies.values_list("depends_on_id", flat=True))
+
+    @staticmethod
+    def resolve_assignee_username(obj) -> Optional[str]:
+        return obj.assignee.username if obj.assignee else None
+
+    @staticmethod
+    def resolve_project_name(obj) -> str:
+        return obj.project.name

@@ -1684,3 +1684,51 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   padding: 2px 8px; border-radius: 5px;
   white-space: nowrap;
 }
+
+/* ====== EXPORT BAR ====== */
+.rp-export-bar { display:flex; gap:8px; padding:8px 16px; background:var(--surface,#f9fafb); border-bottom:1px solid var(--border,#e5e7eb); }
+
+/* ====== GÖREV İLERLEME ÇUBUĞU ====== */
+.task-progress-bar { height:4px; background:var(--border,#e5e9f2); border-radius:2px; margin:4px 0; overflow:hidden; }
+.task-progress-bar span { display:block; height:100%; border-radius:2px; transition:width .3s; }
+.task-overdue { border-left:3px solid #e74c3c !important; }
+
+/* ====== KAYNAKLAR — data-table ====== */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.data-table th {
+  background: var(--bg);
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--muted);
+}
+.data-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #f8faff; }
+
+/* ====== KAYNAKLAR section-header ====== */
+.section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.section-header h2 { font-size:18px; font-weight:700; }
+
+/* ====== KPI DASHBOARD ====== */
+.db-wrap { padding: 20px; }
+.db-title { margin: 0 0 16px; font-size: 1.4rem; font-weight: 700; }
+.db-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.db-budget-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.db-budget-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+.db-budget-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.db-budget-val { font-size: 1.1rem; font-weight: 600; }
+
+/* ====== HAKEDİŞ & PUANTAJ ====== */

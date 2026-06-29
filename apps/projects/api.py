@@ -8,9 +8,11 @@ from ninja.pagination import PageNumberPagination, paginate
 
 from apps.accounts.decorators import require_role
 from apps.accounts.models import User
+from apps.audit.middleware import log_action
+from apps.audit.models import AuditLog
 
 from .colors import province_color
-from .models import Category, Project, ProjectImage, ProjectStatus, Task
+from .models import Category, DependencyType, Project, ProjectImage, ProjectStatus, Task, TaskDependency
 from .schemas import (
     CategoryIn,
     CategoryOut,
@@ -19,6 +21,9 @@ from .schemas import (
     ProjectMapOut,
     ProjectOut,
     ProjectPatch,
+    TaskDependencyIn,
+    TaskDependencyOut,
+    TaskGanttOut,
     TaskIn,
     TaskOut,
     TaskPatch,
@@ -139,6 +144,15 @@ def create_project(request, payload: ProjectIn):
     project.save()
     if member_ids:
         project.members.set(User.objects.filter(id__in=member_ids))
+    user = User.objects.filter(id=request.auth["user_id"]).first()
+    log_action(
+        user=user,
+        action=AuditLog.Action.CREATE,
+        model_name="Project",
+        object_id=project.id,
+        object_repr=str(project),
+        new_value={"name": project.name, "province": project.province, "status": project.status},
+    )
     return _base_queryset().get(id=project.id)
 
 
@@ -151,11 +165,22 @@ def get_project(request, project_id: int):
 @require_role("admin", "editor")
 def update_project(request, project_id: int, payload: ProjectPatch):
     project = get_object_or_404(Project, id=project_id)
+    old_repr = {"name": project.name, "province": project.province, "status": project.status}
     data = payload.model_dump(exclude_unset=True)
     member_ids = _apply_project_fields(project, data)
     project.save()
     if member_ids is not None:
         project.members.set(User.objects.filter(id__in=member_ids))
+    user = User.objects.filter(id=request.auth["user_id"]).first()
+    log_action(
+        user=user,
+        action=AuditLog.Action.UPDATE,
+        model_name="Project",
+        object_id=project.id,
+        object_repr=str(project),
+        old_value=old_repr,
+        new_value={"name": project.name, "province": project.province, "status": project.status},
+    )
     return _base_queryset().get(id=project.id)
 
 
@@ -163,6 +188,16 @@ def update_project(request, project_id: int, payload: ProjectPatch):
 @require_role("admin")
 def delete_project(request, project_id: int):
     project = get_object_or_404(Project, id=project_id)
+    old_repr = {"name": project.name, "province": project.province, "status": project.status}
+    user = User.objects.filter(id=request.auth["user_id"]).first()
+    log_action(
+        user=user,
+        action=AuditLog.Action.DELETE,
+        model_name="Project",
+        object_id=project.id,
+        object_repr=str(project),
+        old_value=old_repr,
+    )
     project.delete()
     return {"detail": "Proje silindi"}
 
@@ -233,3 +268,61 @@ def delete_task(request, project_id: int, task_id: int):
     task = get_object_or_404(Task, id=task_id, project_id=project_id)
     task.delete()
     return {"detail": "Görev silindi"}
+
+
+# --------------------------------------------------------------------------- #
+# Görev İlerleme (PATCH kısayolu)
+# --------------------------------------------------------------------------- #
+@router.patch("/{project_id}/tasks/{task_id}/progress", response=TaskOut)
+@require_role("admin", "editor")
+def update_task_progress(request, project_id: int, task_id: int, progress: int):
+    task = get_object_or_404(Task, id=task_id, project_id=project_id)
+    task.progress = max(0, min(100, progress))
+    if task.progress == 100:
+        task.is_done = True
+    task.save()
+    return task
+
+
+# --------------------------------------------------------------------------- #
+# Görev Bağımlılıkları
+# --------------------------------------------------------------------------- #
+@router.get("/{project_id}/tasks/{task_id}/dependencies", response=list[TaskDependencyOut])
+def list_task_dependencies(request, project_id: int, task_id: int):
+    get_object_or_404(Task, id=task_id, project_id=project_id)
+    return list(TaskDependency.objects.filter(task_id=task_id).select_related("depends_on"))
+
+
+@router.post("/{project_id}/tasks/{task_id}/dependencies", response={200: TaskDependencyOut})
+@require_role("admin", "editor")
+def add_task_dependency(request, project_id: int, task_id: int, payload: TaskDependencyIn):
+    task = get_object_or_404(Task, id=task_id, project_id=project_id)
+    depends_on = get_object_or_404(Task, id=payload.depends_on_id, project_id=project_id)
+    dep, _ = TaskDependency.objects.get_or_create(
+        task=task, depends_on=depends_on,
+        defaults={"dep_type": payload.dep_type}
+    )
+    return dep
+
+
+@router.delete("/{project_id}/tasks/{task_id}/dependencies/{dep_id}", response={200: dict})
+@require_role("admin", "editor")
+def delete_task_dependency(request, project_id: int, task_id: int, dep_id: int):
+    dep = get_object_or_404(TaskDependency, id=dep_id, task_id=task_id)
+    dep.delete()
+    return {"detail": "Bağımlılık silindi"}
+
+
+# --------------------------------------------------------------------------- #
+# Gantt (proje bazlı)
+# --------------------------------------------------------------------------- #
+@router.get("/{project_id}/gantt", response=list[TaskGanttOut])
+def project_gantt(request, project_id: int):
+    get_object_or_404(Project, id=project_id)
+    return list(
+        Task.objects
+        .filter(project_id=project_id)
+        .select_related("project", "assignee")
+        .prefetch_related("dependencies")
+        .order_by("planned_start", "id")
+    )

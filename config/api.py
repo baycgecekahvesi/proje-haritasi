@@ -5,6 +5,7 @@ from ninja import NinjaAPI
 from ninja.errors import AuthenticationError, HttpError, ValidationError
 
 from apps.accounts.api import router as accounts_router
+from apps.audit.api import router as audit_router
 from apps.agents.api import router as agents_router
 from apps.accounts.auth import AuthBearer
 from apps.budget.api import router as budget_router
@@ -18,6 +19,8 @@ from apps.skills.api import router as skills_router
 from apps.risks.api import router as risks_router
 from apps.punchlist.api import router as punch_router
 from apps.iolist.api import router as io_router
+from apps.resources.api import router as resources_router
+from apps.payroll.api import router as payroll_router
 
 api = NinjaAPI(
     title="ProjeHaritasi API",
@@ -39,6 +42,9 @@ api.add_router("/agents", agents_router, tags=["Ajanlar"])
 api.add_router("/risks", risks_router, tags=["Risk Yonetimi"])
 api.add_router("/punch", punch_router, tags=["Punch List"])
 api.add_router("/io", io_router, tags=["IO Listesi"])
+api.add_router("/audit", audit_router, tags=["Audit Log"])
+api.add_router("/resources", resources_router, tags=["Kaynak Yönetimi"])
+api.add_router("/payroll", payroll_router, tags=["Hakediş & Puantaj"])
 
 
 @api.exception_handler(AuthenticationError)

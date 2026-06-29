@@ -221,6 +221,153 @@ def budget_by_province() -> list[dict]:
     ]
 
 
+def kpi_dashboard() -> dict:
+    """Üst yönetim KPI özeti — tek çağrıda tüm metrikler."""
+    today = date.today()
+    money = DecimalField(max_digits=18, decimal_places=2)
+
+    counts = Project.objects.aggregate(
+        toplam=Count("id"),
+        aktif=Count("id", filter=Q(status=ProjectStatus.ACTIVE)),
+        tamamlandi=Count("id", filter=Q(status=ProjectStatus.COMPLETED)),
+        beklemede=Count("id", filter=Q(status=ProjectStatus.PENDING)),
+        iptal=Count("id", filter=Q(status=ProjectStatus.CANCELLED)),
+        ort_ilerleme=Avg("progress"),
+    )
+    geciken = (
+        Project.objects.filter(planned_end__lt=today)
+        .exclude(status=ProjectStatus.COMPLETED)
+        .exclude(planned_end__isnull=True)
+        .count()
+    )
+
+    budget_totals = Budget.objects.aggregate(
+        toplam_butce=Coalesce(Sum("planned_amount"), Decimal("0"), output_field=money),
+        toplam_harcama=Coalesce(Sum("expenses__amount"), Decimal("0"), output_field=money),
+    )
+    toplam_butce = budget_totals["toplam_butce"] or Decimal("0")
+    toplam_harcama = budget_totals["toplam_harcama"] or Decimal("0")
+    butce_kullanim = (
+        round(float(toplam_harcama) / float(toplam_butce) * 100, 1)
+        if toplam_butce
+        else 0
+    )
+
+    delayed_projects = (
+        Project.objects.filter(planned_end__lt=today)
+        .exclude(status=ProjectStatus.COMPLETED)
+        .exclude(planned_end__isnull=True)
+    )
+    gecikme_gunler = [
+        (today - p.planned_end).days
+        for p in delayed_projects
+        if p.planned_end
+    ]
+    ort_gecikme = (
+        round(sum(gecikme_gunler) / len(gecikme_gunler))
+        if gecikme_gunler
+        else 0
+    )
+
+    from apps.projects.models import Task
+    ay_basi = today.replace(day=1)
+    bu_ay_gorev = Task.objects.filter(
+        is_done=True, created_at__date__gte=ay_basi
+    ).count()
+
+    il_bazli = list(
+        Project.objects.values("province")
+        .annotate(
+            proje_sayisi=Count("id"),
+            ort_ilerleme=Avg("progress"),
+            geciken_sayisi=Count(
+                "id",
+                filter=Q(planned_end__lt=today) & ~Q(status=ProjectStatus.COMPLETED),
+            ),
+        )
+        .order_by("-proje_sayisi")[:10]
+    )
+
+    try:
+        from apps.risks.models import Risk
+        kritik_risk = (
+            Risk.objects.filter(olasilik__gte=4, etki__gte=4)
+            .exclude(durum="kapandi")
+            .count()
+        )
+    except Exception:
+        kritik_risk = 0
+
+    return {
+        "toplam_proje": counts["toplam"] or 0,
+        "aktif_proje": counts["aktif"] or 0,
+        "tamamlanan_proje": counts["tamamlandi"] or 0,
+        "bekleyen_proje": counts["beklemede"] or 0,
+        "geciken_proje": geciken,
+        "ort_ilerleme": round(float(counts["ort_ilerleme"] or 0), 1),
+        "toplam_butce": toplam_butce,
+        "toplam_harcama": toplam_harcama,
+        "toplam_kalan": toplam_butce - toplam_harcama,
+        "butce_kullanim_orani": butce_kullanim,
+        "ortalama_gecikme_gun": ort_gecikme,
+        "bu_ay_tamamlanan_gorev": bu_ay_gorev,
+        "kritik_riskler": kritik_risk,
+        "il_bazli_performans": il_bazli,
+    }
+
+
+def s_curve(project_id: int) -> list[dict]:
+    """Haftalık planlanan vs gerçekleşen ilerleme (S-eğrisi)."""
+    project = Project.objects.filter(id=project_id).first()
+    if not project or not project.planned_start or not project.planned_end:
+        return []
+
+    start = project.planned_start
+    end = project.planned_end
+    today = date.today()
+    total_days = max((end - start).days, 1)
+
+    from apps.projects.models import Task
+    tasks = list(
+        Task.objects.filter(project_id=project_id).only(
+            "planned_start", "planned_end", "actual_start", "actual_end",
+            "progress", "is_done",
+        )
+    )
+
+    weeks = []
+    w = start
+    while w <= min(end, today) + timedelta(days=7):
+        w_end = w + timedelta(days=6)
+        elapsed = max((w_end - start).days, 0)
+        planned_pct = min(100.0, elapsed / total_days * 100)
+
+        if tasks:
+            done = sum(
+                1 for t in tasks
+                if t.is_done and t.actual_end and t.actual_end <= w_end
+            )
+            actual_pct = round(done / len(tasks) * 100, 1) if w_end <= today else None
+        else:
+            if w_end > today:
+                actual_pct = None
+            else:
+                actual_elapsed = max((w_end - start).days, 0)
+                actual_pct = min(float(project.progress), actual_elapsed / total_days * 100)
+
+        weeks.append({
+            "week": w,
+            "planned_pct": round(planned_pct, 1),
+            "actual_pct": actual_pct,
+        })
+
+        if w > end + timedelta(days=7):
+            break
+        w += timedelta(days=7)
+
+    return weeks
+
+
 def status_distribution() -> list[dict]:
     """Durum bazlı proje sayısı ve yüzdesi."""
     total = Project.objects.count() or 1

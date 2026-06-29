@@ -115,6 +115,12 @@ class Task(models.Model):
     )
     is_done = models.BooleanField(default=False)
     due_date = models.DateField(null=True, blank=True)
+    planned_start = models.DateField(null=True, blank=True)
+    planned_end = models.DateField(null=True, blank=True)
+    actual_start = models.DateField(null=True, blank=True)
+    actual_end = models.DateField(null=True, blank=True)
+    progress = models.PositiveSmallIntegerField(default=0)  # 0-100
+    delay_reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -124,3 +130,26 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class DependencyType(models.TextChoices):
+    FS = "FS", "Finish-Start"
+    SS = "SS", "Start-Start"
+    FF = "FF", "Finish-Finish"
+    SF = "SF", "Start-Finish"
+
+
+class TaskDependency(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="dependencies")
+    depends_on = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="required_by")
+    dep_type = models.CharField(
+        max_length=2, choices=DependencyType.choices, default=DependencyType.FS
+    )
+
+    class Meta:
+        unique_together = [("task", "depends_on")]
+        verbose_name = "Görev Bağımlılığı"
+        verbose_name_plural = "Görev Bağımlılıkları"
+
+    def __str__(self):
+        return f"{self.task} → {self.depends_on} ({self.dep_type})"

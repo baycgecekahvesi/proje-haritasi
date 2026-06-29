@@ -88,3 +88,33 @@ class StatusDistOut(Schema):
     label: str
     count: int
     pct: float
+
+
+class IlPerformansOut(Schema):
+    province: str
+    proje_sayisi: int
+    ort_ilerleme: float
+    geciken_sayisi: int
+
+
+class KpiDashboardOut(Schema):
+    toplam_proje: int
+    aktif_proje: int
+    tamamlanan_proje: int
+    bekleyen_proje: int
+    geciken_proje: int
+    ort_ilerleme: float
+    toplam_butce: Decimal
+    toplam_harcama: Decimal
+    toplam_kalan: Decimal
+    butce_kullanim_orani: float
+    ortalama_gecikme_gun: int
+    bu_ay_tamamlanan_gorev: int
+    kritik_riskler: int
+    il_bazli_performans: list[dict]
+
+
+class SCurvePointOut(Schema):
+    week: date
+    planned_pct: float
+    actual_pct: Optional[float] = None
