@@ -1,3 +1,4 @@
+from datetime import date as date_type
 from typing import Optional
 
 from ninja import Schema
@@ -55,3 +56,34 @@ class BildirimOut(Schema):
 
 class MessageOut(Schema):
     detail: str
+
+
+class ContractorProfileOut(Schema):
+    id:             int
+    company_name:   str
+    tax_number:     str
+    contact_person: str
+    phone:          str
+    address:        str
+
+
+class ProjectContractorOut(Schema):
+    id:              int
+    project_id:      int
+    project_name:    str
+    role:            str
+    contract_amount: Optional[float] = None
+    start_date:      Optional[date_type] = None
+    end_date:        Optional[date_type] = None
+
+    @staticmethod
+    def resolve_project_name(obj) -> str:
+        return obj.project.name
+
+
+class ProjectContractorIn(Schema):
+    contractor_id:   int
+    role:            str = ""
+    contract_amount: Optional[float] = None
+    start_date:      Optional[date_type] = None
+    end_date:        Optional[date_type] = None

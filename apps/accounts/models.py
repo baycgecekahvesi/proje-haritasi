@@ -60,3 +60,38 @@ class Bildirim(models.Model):
 
     def __str__(self):
         return f"{self.alici.username} — {self.baslik}"
+
+
+class ContractorProfile(models.Model):
+    user           = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="contractor_profile")
+    company_name   = models.CharField(max_length=200)
+    tax_number     = models.CharField(max_length=20, blank=True)
+    contact_person = models.CharField(max_length=100, blank=True)
+    phone          = models.CharField(max_length=20, blank=True)
+    address        = models.TextField(blank=True)
+    created_at     = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Müteahhit Profili"
+        verbose_name_plural = "Müteahhit Profilleri"
+
+    def __str__(self):
+        return f"{self.company_name} ({self.user.username})"
+
+
+class ProjectContractor(models.Model):
+    project         = models.ForeignKey("projects.Project", on_delete=models.CASCADE, related_name="contractors")
+    contractor      = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="contractor_projects")
+    role            = models.CharField(max_length=100, blank=True)
+    contract_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    start_date      = models.DateField(null=True, blank=True)
+    end_date        = models.DateField(null=True, blank=True)
+    created_at      = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [("project", "contractor")]
+        verbose_name = "Proje Müteahhiti"
+        verbose_name_plural = "Proje Müteahhitleri"
+
+    def __str__(self):
+        return f"{self.project.name} — {self.contractor.username}"

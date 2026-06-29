@@ -1731,4 +1731,72 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 .db-budget-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 .db-budget-val { font-size: 1.1rem; font-weight: 600; }
 
+/* ====== MÜTEAHHİT PORTALI ====== */
+.contractor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 8px 0;
+}
+.contractor-project-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.cpc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.cpc-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+.cpc-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted, #666);
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.cpc-actions {
+  display: flex;
+  gap: 8px;
+}
+.contractor-tab-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+.contractor-tab-btn.active {
+  background: var(--primary, #4f6ef7);
+  color: #fff;
+  border-color: var(--primary, #4f6ef7);
+}
+.task-progress-bar {
+  width: 80px;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.task-progress-fill {
+  height: 100%;
+  background: var(--primary, #4f6ef7);
+  border-radius: 3px;
+}
+.progress-label {
+  font-size: 12px;
+  color: var(--muted, #666);
+}
+
 /* ====== HAKEDİŞ & PUANTAJ ====== */

@@ -21,6 +21,7 @@ from apps.punchlist.api import router as punch_router
 from apps.iolist.api import router as io_router
 from apps.resources.api import router as resources_router
 from apps.payroll.api import router as payroll_router
+from apps.accounts.contractor_api import router as contractor_router
 
 api = NinjaAPI(
     title="ProjeHaritasi API",
@@ -45,6 +46,7 @@ api.add_router("/io", io_router, tags=["IO Listesi"])
 api.add_router("/audit", audit_router, tags=["Audit Log"])
 api.add_router("/resources", resources_router, tags=["Kaynak Yönetimi"])
 api.add_router("/payroll", payroll_router, tags=["Hakediş & Puantaj"])
+api.add_router("/contractor", contractor_router, tags=["Müteahhit Portalı"])
 
 
 @api.exception_handler(AuthenticationError)

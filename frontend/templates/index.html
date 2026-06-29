@@ -7,7 +7,7 @@
   <title>Otomasyon Proje Takip</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=15" />
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=16" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 </head>
@@ -97,6 +97,11 @@
             <button class="tab" data-tab="glossary">📖 Kısaltmalar</button>
             <button class="tab" data-tab="resources">📦 Kaynaklar</button>
             <button class="tab" data-tab="payroll">💼 Hakediş &amp; Puantaj</button>
+          </div>
+
+          <div class="sidebar-group">
+            <span class="sidebar-group-label">Portal</span>
+            <button class="tab" data-tab="contractor">🏗️ Müteahhit Portalı</button>
           </div>
 
           <div class="sidebar-group" id="sidebar-group-admin" style="display:none">
@@ -301,6 +306,46 @@
         <div id="py-body" class="rp-body"></div>
       </section>
 
+      <!-- ---------- MÜTEAHHİT PORTALI ---------- -->
+      <section id="panel-contractor" class="panel">
+        <div class="section-header">
+          <h2>🏗️ Müteahhit Portalı</h2>
+        </div>
+
+        <!-- İç sekme butonları -->
+        <div class="tab-bar" style="margin-bottom:16px">
+          <button class="contractor-tab-btn active" data-tab="projects"
+            onclick="Contractor.switchContractorTab('projects')">
+            📋 Projelerim
+          </button>
+          <button class="contractor-tab-btn" data-tab="tasks"
+            onclick="Contractor.switchContractorTab('tasks')">
+            ✅ Görevlerim
+          </button>
+          <button class="contractor-tab-btn" data-tab="docs"
+            onclick="Contractor.switchContractorTab('docs')">
+            📄 Dökümanlar
+          </button>
+        </div>
+
+        <!-- Projelerim -->
+        <div id="contractor-projects-section">
+          <div id="contractor-projects-wrap" class="contractor-grid"></div>
+        </div>
+
+        <!-- Görevlerim -->
+        <div id="contractor-tasks-section" style="display:none">
+          <h3 id="contractor-tasks-title" style="margin-bottom:12px">Görevler</h3>
+          <div id="contractor-tasks-wrap"></div>
+        </div>
+
+        <!-- Dökümanlar -->
+        <div id="contractor-docs-section" style="display:none">
+          <h3 id="contractor-docs-title" style="margin-bottom:12px">Dökümanlar</h3>
+          <div id="contractor-docs-wrap"></div>
+        </div>
+      </section>
+
       <!-- ---------- KULLANICILAR SEKMESİ ---------- -->
       <section id="panel-users" class="panel">
         <div class="panel-head">
@@ -350,6 +395,7 @@
   <script src="{% static 'js/resources.js' %}?v=1"></script>
   <script src="{% static 'js/dashboard.js' %}?v=1"></script>
   <script src="{% static 'js/payroll.js' %}?v=1"></script>
-  <script src="{% static 'js/app.js' %}?v=10"></script>
+  <script src="{% static 'js/contractor.js' %}?v=1"></script>
+  <script src="{% static 'js/app.js' %}?v=11"></script>
 </body>
 </html>
