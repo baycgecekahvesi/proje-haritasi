@@ -17,7 +17,7 @@ const Quality = (() => {
     if (!body) return;
 
     let projects = [];
-    try { const d = await API.get("/projects/"); projects = d.items || d; } catch {}
+    try { const d = await API.get("/projects"); projects = d.items || d; } catch {}
 
     body.innerHTML = `
       <div class="section-header" style="margin-bottom:16px">
@@ -61,7 +61,7 @@ const Quality = (() => {
     const content = document.getElementById("quality-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let plans = [];
-    try { plans = await API.get(`/quality/plans/?project_id=${selectedProjectId}`); } catch (e) {
+    try { plans = await API.get(`/quality/plans?project_id=${selectedProjectId}`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -96,7 +96,7 @@ const Quality = (() => {
     const content = document.getElementById("quality-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let items = [];
-    try { items = await API.get(`/quality/plans/${planId}/items/`); } catch (e) {
+    try { items = await API.get(`/quality/plans/${planId}/items`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -132,7 +132,7 @@ const Quality = (() => {
       content.querySelectorAll("[data-complete-item]").forEach(el => {
         el.onclick = async () => {
           try {
-            await API.patch(`/quality/plans/${el.dataset.plan}/items/${el.dataset.completeItem}/`, { is_completed: true });
+            await API.patch(`/quality/plans/${el.dataset.plan}/items/${el.dataset.completeItem}`, { is_completed: true });
             UI.toast("Kalem tamamlandı", "success");
             _renderPlanItems(planId, planTitle);
           } catch (err) { UI.toast(err.message, "error"); }
@@ -166,7 +166,7 @@ const Quality = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post("/quality/plans/", {
+        await API.post("/quality/plans", {
           project_id: +selectedProjectId,
           title: fd.get("title"),
           responsible: fd.get("responsible") || "",
@@ -204,7 +204,7 @@ const Quality = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post(`/quality/plans/${planId}/items/`, {
+        await API.post(`/quality/plans/${planId}/items`, {
           activity: fd.get("activity"),
           hold_point_type: fd.get("hold_point_type"),
           responsible: fd.get("responsible") || "",
@@ -221,7 +221,7 @@ const Quality = (() => {
     const content = document.getElementById("quality-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let ncrs = [];
-    try { ncrs = await API.get(`/quality/${selectedProjectId}/ncrs/`); } catch (e) {
+    try { ncrs = await API.get(`/quality/${selectedProjectId}/ncrs`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -275,7 +275,7 @@ const Quality = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post(`/quality/${selectedProjectId}/ncrs/`, {
+        await API.post(`/quality/${selectedProjectId}/ncrs`, {
           title: fd.get("title"),
           description: fd.get("description") || "",
           severity: fd.get("severity"),

@@ -13,7 +13,7 @@ const Procurement = (() => {
     if (!body) return;
 
     let projects = [];
-    try { const d = await API.get("/projects/"); projects = d.items || d; } catch {}
+    try { const d = await API.get("/projects"); projects = d.items || d; } catch {}
 
     body.innerHTML = `
       <div class="section-header" style="margin-bottom:16px">
@@ -54,7 +54,7 @@ const Procurement = (() => {
     const content = document.getElementById("proc-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let reqs = [];
-    try { reqs = await API.get(`/procurement/requests/?project_id=${selectedProjectId}`); } catch (e) {
+    try { reqs = await API.get(`/procurement/requests?project_id=${selectedProjectId}`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -106,7 +106,7 @@ const Procurement = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post("/procurement/requests/", {
+        await API.post("/procurement/requests", {
           project_id: +selectedProjectId,
           item_name: fd.get("item_name"),
           quantity: parseFloat(fd.get("quantity")),
@@ -126,7 +126,7 @@ const Procurement = (() => {
     const content = document.getElementById("proc-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let orders = [];
-    try { orders = await API.get(`/procurement/orders/?project_id=${selectedProjectId}`); } catch (e) {
+    try { orders = await API.get(`/procurement/orders?project_id=${selectedProjectId}`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -185,7 +185,7 @@ const Procurement = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post("/procurement/orders/", {
+        await API.post("/procurement/orders", {
           project_id: +selectedProjectId,
           po_number: fd.get("po_number") || "",
           supplier: fd.get("supplier") || "",
@@ -218,7 +218,7 @@ const Procurement = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post(`/procurement/orders/${orderId}/deliveries/`, {
+        await API.post(`/procurement/orders/${orderId}/deliveries`, {
           delivery_date: fd.get("delivery_date"),
           received_quantity: parseFloat(fd.get("received_quantity") || "0"),
           notes: fd.get("notes") || "",

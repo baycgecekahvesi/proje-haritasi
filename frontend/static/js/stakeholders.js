@@ -14,7 +14,7 @@ const Stakeholders = (() => {
     if (!body) return;
 
     let projects = [];
-    try { const d = await API.get("/projects/"); projects = d.items || d; } catch {}
+    try { const d = await API.get("/projects"); projects = d.items || d; } catch {}
 
     body.innerHTML = `
       <div class="section-header" style="margin-bottom:16px">
@@ -45,7 +45,7 @@ const Stakeholders = (() => {
     const content = document.getElementById("sh-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let stakeholders = [];
-    try { stakeholders = await API.get(`/stakeholders/?project_id=${selectedProjectId}`); } catch (e) {
+    try { stakeholders = await API.get(`/stakeholders?project_id=${selectedProjectId}`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -82,7 +82,7 @@ const Stakeholders = (() => {
         el.onclick = async () => {
           if (!confirm("Paydaş silinsin mi?")) return;
           try {
-            await API.del(`/stakeholders/${el.dataset.delSh}/`);
+            await API.del(`/stakeholders/${el.dataset.delSh}`);
             UI.toast("Paydaş silindi", "success");
             _renderList();
           } catch (err) { UI.toast(err.message, "error"); }
@@ -144,8 +144,8 @@ const Stakeholders = (() => {
         contact_info: fd.get("contact_info") || "",
       };
       try {
-        if (isEdit) await API.patch(`/stakeholders/${sh.id}/`, payload);
-        else await API.post("/stakeholders/", payload);
+        if (isEdit) await API.patch(`/stakeholders/${sh.id}`, payload);
+        else await API.post("/stakeholders", payload);
         UI.toast(isEdit ? "Paydaş güncellendi" : "Paydaş eklendi", "success");
         UI.closeModal();
         _renderList();

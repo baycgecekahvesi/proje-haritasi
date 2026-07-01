@@ -11,7 +11,7 @@ const Correspondence = (() => {
     if (!body) return;
 
     let projects = [];
-    try { const d = await API.get("/projects/"); projects = d.items || d; } catch {}
+    try { const d = await API.get("/projects"); projects = d.items || d; } catch {}
 
     body.innerHTML = `
       <div class="section-header" style="margin-bottom:16px">
@@ -43,7 +43,7 @@ const Correspondence = (() => {
     const content = document.getElementById("corr-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let items = [];
-    try { items = await API.get(`/correspondence/?project_id=${selectedProjectId}`); } catch (e) {
+    try { items = await API.get(`/correspondence?project_id=${selectedProjectId}`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -130,7 +130,7 @@ const Correspondence = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post("/correspondence/", {
+        await API.post("/correspondence", {
           project_id: +selectedProjectId,
           ref_number: fd.get("ref_number") || "",
           type: fd.get("type"),

@@ -10,7 +10,7 @@ const ChangeOrders = (() => {
     if (!body) return;
 
     let projects = [];
-    try { const d = await API.get("/projects/"); projects = d.items || d; } catch {}
+    try { const d = await API.get("/projects"); projects = d.items || d; } catch {}
 
     body.innerHTML = `
       <div class="section-header" style="margin-bottom:16px">
@@ -34,7 +34,7 @@ const ChangeOrders = (() => {
     const content = document.getElementById("co-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let orders = [];
-    try { orders = await API.get(`/change-orders/?project_id=${selectedProjectId}`); } catch (e) {
+    try { orders = await API.get(`/change-orders?project_id=${selectedProjectId}`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -147,7 +147,7 @@ const ChangeOrders = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post("/change-orders/", {
+        await API.post("/change-orders", {
           project_id: +selectedProjectId,
           title: fd.get("title"),
           reason: fd.get("reason") || "",

@@ -12,7 +12,7 @@ const Meetings = (() => {
     if (!body) return;
 
     let projects = [];
-    try { const d = await API.get("/projects/"); projects = d.items || d; } catch {}
+    try { const d = await API.get("/projects"); projects = d.items || d; } catch {}
 
     body.innerHTML = `
       <div class="section-header" style="margin-bottom:16px">
@@ -43,7 +43,7 @@ const Meetings = (() => {
     const content = document.getElementById("mtg-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let meetings = [];
-    try { meetings = await API.get(`/meetings/?project_id=${selectedProjectId}`); } catch (e) {
+    try { meetings = await API.get(`/meetings?project_id=${selectedProjectId}`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     content.innerHTML = `
@@ -80,7 +80,7 @@ const Meetings = (() => {
     try {
       const meetings = await API.get(`/meetings/?project_id=${selectedProjectId}`);
       meeting = meetings.find(m => m.id === meetingId);
-      actions = await API.get(`/meetings/${meetingId}/actions/`);
+      actions = await API.get(`/meetings/${meetingId}/actions`);
     } catch (e) {
       UI.toast(e.message, "error"); return;
     }
@@ -124,7 +124,7 @@ const Meetings = (() => {
       document.querySelectorAll("[data-complete-action]").forEach(el => {
         el.onclick = async () => {
           try {
-            await API.patch(`/meetings/${meetingId}/actions/${el.dataset.completeAction}/`, { status: "completed" });
+            await API.patch(`/meetings/${meetingId}/actions/${el.dataset.completeAction}`, { status: "completed" });
             UI.toast("Aksiyon tamamlandı", "success");
             _openMeetingDetail(meetingId);
           } catch (err) { UI.toast(err.message, "error"); }
@@ -165,7 +165,7 @@ const Meetings = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post("/meetings/", {
+        await API.post("/meetings", {
           project_id: +selectedProjectId,
           title: fd.get("title"),
           type: fd.get("type"),
@@ -202,7 +202,7 @@ const Meetings = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post(`/meetings/${meetingId}/actions/`, {
+        await API.post(`/meetings/${meetingId}/actions`, {
           description: fd.get("description"),
           responsible: fd.get("responsible") || "",
           due_date: fd.get("due_date") || null,

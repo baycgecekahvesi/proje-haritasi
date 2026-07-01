@@ -13,7 +13,7 @@ const HSE = (() => {
     if (!body) return;
 
     let projects = [];
-    try { const d = await API.get("/projects/"); projects = d.items || d; } catch {}
+    try { const d = await API.get("/projects"); projects = d.items || d; } catch {}
 
     body.innerHTML = `
       <div class="section-header" style="margin-bottom:16px">
@@ -54,7 +54,7 @@ const HSE = (() => {
   async function _loadSummary() {
     const summaryEl = document.getElementById("hse-summary");
     try {
-      const s = await API.get(`/hse/summary/?project_id=${selectedProjectId}`);
+      const s = await API.get(`/hse/summary?project_id=${selectedProjectId}`);
       summaryEl.style.display = "";
       summaryEl.innerHTML = `
         <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -86,7 +86,7 @@ const HSE = (() => {
     const content = document.getElementById("hse-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let entries = [];
-    try { entries = await API.get(`/hse/worker-entries/?project_id=${selectedProjectId}`); } catch (e) {
+    try { entries = await API.get(`/hse/worker-entries?project_id=${selectedProjectId}`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -135,7 +135,7 @@ const HSE = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post("/hse/worker-entries/", {
+        await API.post("/hse/worker-entries", {
           project_id: +selectedProjectId,
           date: fd.get("date"),
           worker_count: parseInt(fd.get("worker_count"), 10),
@@ -154,7 +154,7 @@ const HSE = (() => {
     const content = document.getElementById("hse-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let accidents = [];
-    try { accidents = await API.get(`/hse/accidents/?project_id=${selectedProjectId}`); } catch (e) {
+    try { accidents = await API.get(`/hse/accidents?project_id=${selectedProjectId}`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -222,7 +222,7 @@ const HSE = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post("/hse/accidents/", {
+        await API.post("/hse/accidents", {
           project_id: +selectedProjectId,
           date: fd.get("date"),
           severity: fd.get("severity"),
@@ -243,7 +243,7 @@ const HSE = (() => {
     const content = document.getElementById("hse-content");
     content.innerHTML = `<p class="muted">Yükleniyor…</p>`;
     let inspections = [];
-    try { inspections = await API.get(`/hse/inspections/?project_id=${selectedProjectId}`); } catch (e) {
+    try { inspections = await API.get(`/hse/inspections?project_id=${selectedProjectId}`); } catch (e) {
       content.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -294,7 +294,7 @@ const HSE = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post("/hse/inspections/", {
+        await API.post("/hse/inspections", {
           project_id: +selectedProjectId,
           date: fd.get("date"),
           inspector: fd.get("inspector") || "",
