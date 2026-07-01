@@ -25,6 +25,9 @@ python manage.py seed_punchlist || echo "UYARI: seed_punchlist başarısız, dev
 echo "=== Seed: I/O listesi ==="
 python manage.py seed_iolist || echo "UYARI: seed_iolist başarısız, devam ediliyor"
 
+echo "=== Seed: PM modülleri ==="
+python manage.py seed_pm_data || echo "UYARI: seed_pm_data başarısız, devam ediliyor"
+
 echo "=== Gunicorn başlatılıyor ==="
 exec gunicorn config.wsgi:application \
   --bind "0.0.0.0:${PORT:-8000}" \
