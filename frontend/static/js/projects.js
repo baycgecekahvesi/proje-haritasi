@@ -122,6 +122,7 @@ const Projects = (() => {
       <div class="detail-section"><h4>💰 Bütçe</h4><div id="budget-box">Yükleniyor…</div></div>
       <div class="detail-section"><h4>📎 Dökümanlar</h4><div id="docs-box">Yükleniyor…</div></div>
       <div class="detail-section"><h4>🖼️ Görseller</h4><div id="images-box">Yükleniyor…</div></div>
+      <div class="detail-section"><h4>🔑 İzinler</h4><div id="permits-box">Yükleniyor…</div></div>
     `);
 
     if (editor) document.getElementById("edit-project").onclick = () => openForm(p);
@@ -138,6 +139,7 @@ const Projects = (() => {
     Budget.render(p.id, document.getElementById("budget-box"));
     Documents.render(p.id, document.getElementById("docs-box"));
     Images.render(p.id, document.getElementById("images-box"));
+    Permits.render(p.id, document.getElementById("permits-box"));
   }
 
   // ---------------- Form ----------------
@@ -228,11 +230,15 @@ const Tasks = (() => {
     const editor = Auth.isEditor();
     const memberOpts = `<option value="">— Atanmamış —</option>` +
       members.map((m) => `<option value="${m.id}">${UI.esc(m.username)}</option>`).join("");
+    const parentOpts = `<option value="">— Üst Görev Yok —</option>` +
+      tasks.map((t) => `<option value="${t.id}">${t.wbs_code ? "[" + UI.esc(t.wbs_code) + "] " : ""}${UI.esc(t.title)}</option>`).join("");
     box.innerHTML = `
       <div id="task-rows">${tasks.map((t) => rowHtml(t, editor)).join("") || `<p class="muted">Henüz görev yok.</p>`}</div>
       ${editor ? `
-      <form id="task-form" style="margin-top:10px;display:grid;grid-template-columns:1fr auto auto auto auto;gap:6px;align-items:center">
+      <form id="task-form" style="margin-top:10px;display:grid;grid-template-columns:auto 1fr auto auto auto auto auto;gap:6px;align-items:center">
+        <input name="wbs_code" placeholder="WBS (örn: 1.2)" style="width:80px" />
         <input name="title" placeholder="Yeni görev başlığı" required />
+        <select name="parent_id">${parentOpts}</select>
         <select name="assignee_id">${memberOpts}</select>
         <select name="priority">
           <option value="low">Düşük</option><option value="medium" selected>Orta</option><option value="high">Yüksek</option>
@@ -250,6 +256,8 @@ const Tasks = (() => {
         const fd = new FormData(e.target);
         await API.post(`/projects/${projectId}/tasks`, {
           title: fd.get("title"),
+          wbs_code: fd.get("wbs_code") || "",
+          parent_id: fd.get("parent_id") ? +fd.get("parent_id") : null,
           assignee_id: fd.get("assignee_id") ? +fd.get("assignee_id") : null,
           priority: fd.get("priority"),
           due_date: fd.get("due_date") || null,
@@ -287,10 +295,12 @@ const Tasks = (() => {
 
   function rowHtml(t, editor) {
     const progressColor = t.is_done ? "#27ae60" : "#4f6ef7";
+    const indent = t.parent_id ? "margin-left:20px;border-left:2px solid var(--border);padding-left:8px;" : "";
     return `
-      <div class="row-item${t.is_overdue && !t.is_done ? " task-overdue" : ""}" data-task-id="${t.id}">
+      <div class="row-item${t.is_overdue && !t.is_done ? " task-overdue" : ""}" data-task-id="${t.id}" style="${indent}">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           ${editor ? `<input type="checkbox" data-toggle="${t.id}" ${t.is_done ? "checked" : ""} />` : ""}
+          ${t.wbs_code ? `<span class="pill" style="font-family:monospace;font-size:11px;background:#4f6ef722;color:#4f6ef7">${UI.esc(t.wbs_code)}</span>` : ""}
           <span style="${t.is_done ? "text-decoration:line-through;color:#95a5a6" : ""}">${UI.esc(t.title)}</span>
           <span class="pill" style="background:${PRIO_COLOR[t.priority]}22;color:${PRIO_COLOR[t.priority]}">${PRIO[t.priority]}</span>
           <span class="muted" style="font-size:11px">%${t.progress || 0}</span>
@@ -305,6 +315,104 @@ const Tasks = (() => {
           <button class="btn btn-sm btn-ghost" data-del-task="${t.id}">✕</button>
         </div>` : ""}
       </div>`;
+  }
+
+  return { render };
+})();
+
+
+// ===================== İZİNLER =====================
+const Permits = (() => {
+  const PERMIT_STATUS_COLOR = { valid: "#27ae60", expired: "#e74c3c", pending: "#f39c12", cancelled: "#95a5a6" };
+  const PERMIT_STATUS_LABEL = { valid: "Geçerli", expired: "Süresi Dolmuş", pending: "Bekliyor", cancelled: "İptal" };
+
+  async function render(projectId, box) {
+    let permits = [];
+    try { permits = await API.get(`/documents/permits/?project_id=${projectId}`); } catch (e) {
+      box.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
+    }
+    const editor = Auth.isEditor();
+    const today = new Date();
+    const thirtyDays = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+    box.innerHTML = `
+      ${!permits.length ? `<p class="muted">İzin/ruhsat kaydı yok.</p>` : `
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+        ${permits.map(pm => {
+          const expiry = pm.expiry_date ? new Date(pm.expiry_date) : null;
+          const isExpired = expiry && expiry < today;
+          const isExpiringSoon = expiry && !isExpired && expiry < thirtyDays;
+          const rowStyle = isExpired
+            ? "background:#e74c3c11;border-left:3px solid #e74c3c;"
+            : isExpiringSoon
+            ? "background:#f39c1211;border-left:3px solid #f39c12;"
+            : "";
+          return `<div class="row-item" style="${rowStyle}">
+            <div>
+              <strong>${UI.esc(pm.permit_type||pm.type||"İzin")}</strong>
+              <span class="pill" style="margin-left:4px">${UI.esc(pm.permit_number||"—")}</span>
+              ${pm.issuing_authority ? `<span class="muted" style="font-size:12px"> · ${UI.esc(pm.issuing_authority)}</span>` : ""}
+              <div class="muted" style="font-size:12px;margin-top:2px">
+                ${pm.start_date ? `Başlangıç: ${UI.fmtDate(pm.start_date)} · ` : ""}
+                ${pm.expiry_date ? `Bitiş: ${UI.fmtDate(pm.expiry_date)}${isExpired?" (Süresi Dolmuş)":isExpiringSoon?" (30 gün içinde doluyor)":""}` : ""}
+              </div>
+            </div>
+            <span class="badge" style="background:${PERMIT_STATUS_COLOR[pm.status]||'#95a5a6'}">${PERMIT_STATUS_LABEL[pm.status]||pm.status}</span>
+          </div>`;
+        }).join("")}
+      </div>`}
+      ${editor ? `<button class="btn btn-sm btn-primary" id="new-permit-btn-${projectId}">+ İzin / Ruhsat Ekle</button>` : ""}
+    `;
+    if (editor) {
+      const btn = box.querySelector(`#new-permit-btn-${projectId}`);
+      if (btn) btn.onclick = () => _openForm(projectId, box);
+    }
+  }
+
+  function _openForm(projectId, box) {
+    UI.openModal(`
+      <h3>Yeni İzin / Ruhsat</h3>
+      <form id="permit-form">
+        <div class="form-row"><label>İzin Türü</label><input name="permit_type" placeholder="İnşaat Ruhsatı, Çevre İzni…" required /></div>
+        <div class="form-row"><label>İzin No</label><input name="permit_number" /></div>
+        <div class="form-row"><label>Veren Kurum</label><input name="issuing_authority" /></div>
+        <div class="form-grid">
+          <div class="form-row"><label>Başlangıç Tarihi</label><input type="date" name="start_date" /></div>
+          <div class="form-row"><label>Bitiş Tarihi</label><input type="date" name="expiry_date" /></div>
+        </div>
+        <div class="form-row"><label>Durum</label>
+          <select name="status">
+            <option value="valid">Geçerli</option>
+            <option value="pending">Bekliyor</option>
+            <option value="expired">Süresi Dolmuş</option>
+            <option value="cancelled">İptal</option>
+          </select>
+        </div>
+        <div class="form-error" id="permit-err"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn" id="permit-cancel">İptal</button>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </div>
+      </form>
+    `);
+    document.getElementById("permit-cancel").onclick = () => UI.closeModal();
+    document.getElementById("permit-form").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      try {
+        await API.post("/documents/permits/", {
+          project_id: +projectId,
+          permit_type: fd.get("permit_type"),
+          permit_number: fd.get("permit_number") || "",
+          issuing_authority: fd.get("issuing_authority") || "",
+          start_date: fd.get("start_date") || null,
+          expiry_date: fd.get("expiry_date") || null,
+          status: fd.get("status"),
+        });
+        UI.toast("İzin kaydedildi", "success");
+        UI.closeModal();
+        render(projectId, box);
+      } catch (err) { document.getElementById("permit-err").textContent = err.message; }
+    };
   }
 
   return { render };

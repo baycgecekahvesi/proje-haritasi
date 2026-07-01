@@ -204,6 +204,43 @@ class EplanDokuman(models.Model):
         return f"{self.seri_no} {self.baslik} ({self.revizyon_no})"
 
 
+class PermitType(models.TextChoices):
+    YAPI_RUHSATI = "yapi_ruhsati", "Yapı Ruhsatı"
+    CEVRE_IZNI = "cevre_izni", "Çevre İzni"
+    ISG_BELGESI = "isg_belgesi", "İSG Belgesi"
+    BELEDIYE_ONAYI = "belediye_onayi", "Belediye Onayı"
+    DIGER = "diger", "Diğer"
+
+
+class PermitStatus(models.TextChoices):
+    ACTIVE = "active", "Aktif"
+    EXPIRED = "expired", "Süresi Dolmuş"
+    PENDING_RENEWAL = "pending_renewal", "Yenileme Bekliyor"
+
+
+class LegalPermit(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="permits")
+    permit_type = models.CharField(max_length=20, choices=PermitType.choices)
+    permit_no = models.CharField(max_length=100)
+    issued_by = models.CharField(max_length=255)
+    issue_date = models.DateField()
+    expiry_date = models.DateField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20, choices=PermitStatus.choices, default=PermitStatus.ACTIVE
+    )
+    file = models.FileField(upload_to="permits/%Y/", null=True, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Yasal İzin/Ruhsat"
+        verbose_name_plural = "Yasal İzinler/Ruhsatlar"
+        ordering = ["expiry_date"]
+
+    def __str__(self):
+        return f"{self.get_permit_type_display()} — {self.permit_no}"
+
+
 class SitePhoto(models.Model):
     project     = models.ForeignKey("projects.Project", on_delete=models.CASCADE, related_name="site_photos")
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="site_photos")

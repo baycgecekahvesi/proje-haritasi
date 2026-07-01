@@ -97,6 +97,13 @@
             <button class="tab" data-tab="glossary">📖 Kısaltmalar</button>
             <button class="tab" data-tab="resources">📦 Kaynaklar</button>
             <button class="tab" data-tab="payroll">💼 Hakediş &amp; Puantaj</button>
+            <button class="tab" data-tab="quality">🔍 Kalite &amp; ITP</button>
+            <button class="tab" data-tab="change-orders">📝 Değişiklik Emirleri</button>
+            <button class="tab" data-tab="procurement">🛒 Tedarik</button>
+            <button class="tab" data-tab="correspondence">✉️ Yazışmalar</button>
+            <button class="tab" data-tab="meetings">📅 Toplantılar</button>
+            <button class="tab" data-tab="hse">⛑️ SGK &amp; İSG</button>
+            <button class="tab" data-tab="stakeholders">👥 Paydaşlar</button>
           </div>
 
           <div class="sidebar-group">
@@ -345,6 +352,41 @@
         </div>
       </section>
 
+      <!-- ---------- KALİTE & ITP ---------- -->
+      <section id="panel-quality" class="panel">
+        <div id="quality-body" class="rp-body"></div>
+      </section>
+
+      <!-- ---------- DEĞİŞİKLİK EMİRLERİ ---------- -->
+      <section id="panel-change-orders" class="panel">
+        <div id="change-orders-body" class="rp-body"></div>
+      </section>
+
+      <!-- ---------- TEDARİK ---------- -->
+      <section id="panel-procurement" class="panel">
+        <div id="procurement-body" class="rp-body"></div>
+      </section>
+
+      <!-- ---------- YAZIŞMALAR ---------- -->
+      <section id="panel-correspondence" class="panel">
+        <div id="correspondence-body" class="rp-body"></div>
+      </section>
+
+      <!-- ---------- TOPLANTILAR ---------- -->
+      <section id="panel-meetings" class="panel">
+        <div id="meetings-body" class="rp-body"></div>
+      </section>
+
+      <!-- ---------- SGK & İSG ---------- -->
+      <section id="panel-hse" class="panel">
+        <div id="hse-body" class="rp-body"></div>
+      </section>
+
+      <!-- ---------- PAYDAŞ YÖNETİMİ ---------- -->
+      <section id="panel-stakeholders" class="panel">
+        <div id="stakeholders-body" class="rp-body"></div>
+      </section>
+
       <!-- ---------- AI ANALİZ & TAHMİNLER ---------- -->
       <section id="panel-ai-insights" class="panel">
         <div class="section-header">
@@ -405,6 +447,13 @@
   <script src="{% static 'js/payroll.js' %}?v=1"></script>
   <script src="{% static 'js/contractor.js' %}?v=1"></script>
   <script src="{% static 'js/ai_insights.js' %}?v=1"></script>
-  <script src="{% static 'js/app.js' %}?v=13"></script>
+  <script src="{% static 'js/quality.js' %}?v=1"></script>
+  <script src="{% static 'js/change_orders.js' %}?v=1"></script>
+  <script src="{% static 'js/procurement.js' %}?v=1"></script>
+  <script src="{% static 'js/correspondence.js' %}?v=1"></script>
+  <script src="{% static 'js/meetings.js' %}?v=1"></script>
+  <script src="{% static 'js/hse.js' %}?v=1"></script>
+  <script src="{% static 'js/stakeholders.js' %}?v=1"></script>
+  <script src="{% static 'js/app.js' %}?v=14"></script>
 </body>
 </html>

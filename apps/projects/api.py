@@ -242,7 +242,39 @@ def delete_image(request, project_id: int, image_id: int):
 @router.get("/{project_id}/tasks", response=list[TaskOut])
 def list_tasks(request, project_id: int):
     get_object_or_404(Project, id=project_id)
-    return list(Task.objects.filter(project_id=project_id).select_related("assignee"))
+    return list(Task.objects.filter(project_id=project_id).select_related("assignee", "parent").order_by("wbs_code", "id"))
+
+
+@router.get("/{project_id}/tasks/tree", response=list[dict])
+def task_tree(request, project_id: int):
+    """WBS ağaç yapısında görevleri döndür (iç içe)."""
+    get_object_or_404(Project, id=project_id)
+    tasks = list(Task.objects.filter(project_id=project_id).select_related("assignee").order_by("wbs_code", "id"))
+
+    def serialize(t):
+        return {
+            "id": t.id,
+            "parent_id": t.parent_id,
+            "wbs_code": t.wbs_code,
+            "title": t.title,
+            "priority": t.priority,
+            "is_done": t.is_done,
+            "progress": t.progress,
+            "planned_start": str(t.planned_start) if t.planned_start else None,
+            "planned_end": str(t.planned_end) if t.planned_end else None,
+            "assignee_username": t.assignee.username if t.assignee else None,
+            "children": [],
+        }
+
+    task_map = {t.id: serialize(t) for t in tasks}
+    roots = []
+    for t in tasks:
+        node = task_map[t.id]
+        if t.parent_id and t.parent_id in task_map:
+            task_map[t.parent_id]["children"].append(node)
+        else:
+            roots.append(node)
+    return roots
 
 
 @router.post("/{project_id}/tasks", response={200: TaskOut})

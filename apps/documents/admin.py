@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Document, EplanDokuman, SitePhoto
+from .models import Document, EplanDokuman, LegalPermit, SitePhoto
 
 
 @admin.register(Document)
@@ -32,3 +32,11 @@ class SitePhotoAdmin(admin.ModelAdmin):
     list_filter = ("taken_at", "uploaded_at")
     search_fields = ("project__name", "uploaded_by__username", "description")
     readonly_fields = ("uploaded_at",)
+
+
+@admin.register(LegalPermit)
+class LegalPermitAdmin(admin.ModelAdmin):
+    list_display = ("permit_no", "project", "permit_type", "issued_by", "issue_date", "expiry_date", "status")
+    list_filter = ("permit_type", "status")
+    search_fields = ("permit_no", "project__name", "issued_by")
+    readonly_fields = ("created_at",)

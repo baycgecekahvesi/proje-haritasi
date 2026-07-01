@@ -134,6 +134,8 @@ class ProjectImageOut(Schema):
 class TaskIn(Schema):
     title: str
     description: str = ""
+    parent_id: Optional[int] = None
+    wbs_code: str = ""
     assignee_id: Optional[int] = None
     priority: str = "medium"
     is_done: bool = False
@@ -149,6 +151,8 @@ class TaskIn(Schema):
 class TaskPatch(Schema):
     title: Optional[str] = None
     description: Optional[str] = None
+    parent_id: Optional[int] = None
+    wbs_code: Optional[str] = None
     assignee_id: Optional[int] = None
     priority: Optional[str] = None
     is_done: Optional[bool] = None
@@ -164,6 +168,8 @@ class TaskPatch(Schema):
 class TaskOut(Schema):
     id: int
     project_id: int
+    parent_id: Optional[int]
+    wbs_code: str
     title: str
     description: str
     assignee_id: Optional[int]
@@ -222,6 +228,8 @@ class TaskDependencyOut(Schema):
 # --------------------------------------------------------------------------- #
 class TaskGanttOut(Schema):
     id: int
+    parent_id: Optional[int]
+    wbs_code: str
     title: str
     project_id: int
     project_name: str

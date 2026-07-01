@@ -142,7 +142,7 @@ const Payroll = (() => {
       </div>
       ${!items.length ? `<p class="muted">Kayıt yok.</p>` : `
       <table class="data-table">
-        <thead><tr><th>Proje</th><th>Dönem</th><th>Planlanan</th><th>Gerçekleşen</th><th>Onaylanan</th><th>Durum</th>${admin?"<th>İşlem</th>":""}</tr></thead>
+        <thead><tr><th>Proje</th><th>Dönem</th><th>Planlanan</th><th>Gerçekleşen</th><th>Onaylanan</th><th>Durum</th><th>Detay</th>${admin?"<th>İşlem</th>":""}</tr></thead>
         <tbody>${items.map(p => `
           <tr>
             <td>${UI.esc(p.project_name)}</td>
@@ -151,6 +151,7 @@ const Payroll = (() => {
             <td>${UI.fmtMoney(p.actual_amount)} ₺</td>
             <td>${UI.fmtMoney(p.approved_amount)} ₺</td>
             <td><span class="badge" style="background:${STATUS_COLOR[p.status]||'#95a5a6'}">${STATUS_LABEL[p.status]||p.status}</span></td>
+            <td><button class="btn btn-sm btn-ghost" data-pay-detail="${p.id}">Metraj & Fiyat</button></td>
             ${admin ? `<td>
               ${p.status !== "approved" ? `<button class="btn btn-sm btn-primary" data-approve-pay="${p.id}">Onayla</button>` : ""}
               <button class="btn btn-sm btn-danger" data-del-pay="${p.id}">x</button>
@@ -163,6 +164,9 @@ const Payroll = (() => {
       const btn = document.getElementById("new-pay-btn");
       if (btn) btn.onclick = () => _openPaymentForm();
     }
+    body.querySelectorAll("[data-pay-detail]").forEach(el => {
+      el.onclick = () => _openPaymentDetail(+el.dataset.payDetail);
+    });
     if (admin) {
       body.querySelectorAll("[data-approve-pay]").forEach(el => el.onclick = async () => {
         await API.post(`/payroll/payments/${el.dataset.approvePay}/approve`, {});
@@ -176,6 +180,161 @@ const Payroll = (() => {
         _renderPayments();
       });
     }
+  }
+
+  // ── Hakediş Detay: Metraj & Fiyat Farkı ─────────────────
+  async function _openPaymentDetail(paymentId) {
+    let metraj = [], fiyatFarki = [];
+    try { metraj = await API.get(`/payroll/payments/${paymentId}/metraj/`); } catch {}
+    try { fiyatFarki = await API.get(`/payroll/payments/${paymentId}/fiyat-farki/`); } catch {}
+    const editor = Auth.isEditor();
+
+    const metrajTotal = metraj.reduce((sum, r) => sum + (parseFloat(r.unit_price||0) * parseFloat(r.actual_quantity||0)), 0);
+
+    UI.openModal(`
+      <h3>Hakediş Detayı</h3>
+
+      <h4 style="margin:12px 0 8px">📐 Metraj Cetveli</h4>
+      ${!metraj.length ? `<p class="muted">Metraj satırı yok.</p>` : `
+      <table class="data-table" style="font-size:12px">
+        <thead>
+          <tr>
+            <th>Poz No</th><th>Tanım</th><th>Birim</th>
+            <th style="text-align:right">Sözleşme Miktarı</th>
+            <th style="text-align:right">Gerçekleşen</th>
+            <th style="text-align:right">Birim Fiyat</th>
+            <th style="text-align:right">Tutar</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${metraj.map(r => {
+            const amount = parseFloat(r.unit_price||0) * parseFloat(r.actual_quantity||0);
+            return `<tr>
+              <td style="font-family:monospace">${UI.esc(r.poz_number||"—")}</td>
+              <td>${UI.esc(r.description)}</td>
+              <td class="muted">${UI.esc(r.unit||"—")}</td>
+              <td style="text-align:right">${UI.fmtMoney(r.contract_quantity)}</td>
+              <td style="text-align:right">${UI.fmtMoney(r.actual_quantity)}</td>
+              <td style="text-align:right">${UI.fmtMoney(r.unit_price)} ₺</td>
+              <td style="text-align:right;font-weight:600">${UI.fmtMoney(amount)} ₺</td>
+            </tr>`;
+          }).join("")}
+          <tr style="font-weight:700;border-top:2px solid var(--border)">
+            <td colspan="6" style="text-align:right">Toplam</td>
+            <td style="text-align:right">${UI.fmtMoney(metrajTotal)} ₺</td>
+          </tr>
+        </tbody>
+      </table>`}
+      ${editor ? `<button class="btn btn-sm btn-primary" style="margin-top:8px" id="new-metraj-btn">+ Satır Ekle</button>` : ""}
+
+      <h4 style="margin:16px 0 8px">📊 Fiyat Farkı</h4>
+      ${!fiyatFarki.length ? `<p class="muted">Fiyat farkı kaydı yok.</p>` : `
+      <table class="data-table" style="font-size:12px">
+        <thead>
+          <tr>
+            <th>Endeks Türü</th>
+            <th style="text-align:right">Başlangıç Endeksi</th>
+            <th style="text-align:right">Bitiş Endeksi</th>
+            <th style="text-align:right">Fark Tutarı</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${fiyatFarki.map(ff => `
+          <tr>
+            <td>${UI.esc(ff.index_type||"—")}</td>
+            <td style="text-align:right">${UI.fmtMoney(ff.start_index)}</td>
+            <td style="text-align:right">${UI.fmtMoney(ff.end_index)}</td>
+            <td style="text-align:right;font-weight:600;color:${parseFloat(ff.difference_amount||0)>=0?"#27ae60":"#e74c3c"}">
+              ${parseFloat(ff.difference_amount||0)>=0?"+":""}${UI.fmtMoney(ff.difference_amount)} ₺
+            </td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`}
+      ${editor ? `<button class="btn btn-sm btn-primary" style="margin-top:8px" id="new-ff-btn">+ Fiyat Farkı Ekle</button>` : ""}
+    `);
+
+    if (editor) {
+      const metrajBtn = document.getElementById("new-metraj-btn");
+      if (metrajBtn) metrajBtn.onclick = () => _openMetrajForm(paymentId);
+      const ffBtn = document.getElementById("new-ff-btn");
+      if (ffBtn) ffBtn.onclick = () => _openFiyatFarkiForm(paymentId);
+    }
+  }
+
+  async function _openMetrajForm(paymentId) {
+    UI.openModal(`
+      <h3>Metraj Satırı Ekle</h3>
+      <form id="metraj-form">
+        <div class="form-grid">
+          <div class="form-row"><label>Poz No</label><input name="poz_number" placeholder="1.1.1" /></div>
+          <div class="form-row"><label>Birim</label><input name="unit" placeholder="adet, m², m…" /></div>
+        </div>
+        <div class="form-row"><label>Tanım</label><input name="description" required /></div>
+        <div class="form-grid">
+          <div class="form-row"><label>Sözleşme Miktarı</label><input type="number" step="0.001" name="contract_quantity" value="0" /></div>
+          <div class="form-row"><label>Gerçekleşen Miktar</label><input type="number" step="0.001" name="actual_quantity" value="0" /></div>
+          <div class="form-row"><label>Birim Fiyat (₺)</label><input type="number" step="0.01" name="unit_price" value="0" /></div>
+        </div>
+        <div class="form-error" id="metraj-err"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn" id="metraj-cancel">İptal</button>
+          <button type="submit" class="btn btn-primary">Ekle</button>
+        </div>
+      </form>
+    `);
+    document.getElementById("metraj-cancel").onclick = () => { UI.closeModal(); _openPaymentDetail(paymentId); };
+    document.getElementById("metraj-form").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      try {
+        await API.post(`/payroll/payments/${paymentId}/metraj/`, {
+          poz_number: fd.get("poz_number") || "",
+          description: fd.get("description"),
+          unit: fd.get("unit") || "",
+          contract_quantity: parseFloat(fd.get("contract_quantity")||"0"),
+          actual_quantity: parseFloat(fd.get("actual_quantity")||"0"),
+          unit_price: parseFloat(fd.get("unit_price")||"0"),
+        });
+        UI.toast("Metraj satırı eklendi", "success");
+        UI.closeModal();
+        _openPaymentDetail(paymentId);
+      } catch (err) { document.getElementById("metraj-err").textContent = err.message; }
+    };
+  }
+
+  async function _openFiyatFarkiForm(paymentId) {
+    UI.openModal(`
+      <h3>Fiyat Farkı Ekle</h3>
+      <form id="ff-form">
+        <div class="form-row"><label>Endeks Türü</label><input name="index_type" placeholder="ÜFE, TÜFE, İnşaat İndeksi…" required /></div>
+        <div class="form-grid">
+          <div class="form-row"><label>Başlangıç Endeksi</label><input type="number" step="0.001" name="start_index" value="0" /></div>
+          <div class="form-row"><label>Bitiş Endeksi</label><input type="number" step="0.001" name="end_index" value="0" /></div>
+          <div class="form-row"><label>Fark Tutarı (₺)</label><input type="number" step="0.01" name="difference_amount" value="0" /></div>
+        </div>
+        <div class="form-error" id="ff-err"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn" id="ff-cancel">İptal</button>
+          <button type="submit" class="btn btn-primary">Ekle</button>
+        </div>
+      </form>
+    `);
+    document.getElementById("ff-cancel").onclick = () => { UI.closeModal(); _openPaymentDetail(paymentId); };
+    document.getElementById("ff-form").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      try {
+        await API.post(`/payroll/payments/${paymentId}/fiyat-farki/`, {
+          index_type: fd.get("index_type"),
+          start_index: parseFloat(fd.get("start_index")||"0"),
+          end_index: parseFloat(fd.get("end_index")||"0"),
+          difference_amount: parseFloat(fd.get("difference_amount")||"0"),
+        });
+        UI.toast("Fiyat farkı eklendi", "success");
+        UI.closeModal();
+        _openPaymentDetail(paymentId);
+      } catch (err) { document.getElementById("ff-err").textContent = err.message; }
+    };
   }
 
   async function _openPaymentForm() {

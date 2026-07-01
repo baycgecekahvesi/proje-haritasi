@@ -51,6 +51,34 @@ class Budget(models.Model):
         return self.total_spent > self.planned_amount
 
 
+class BudgetLineCategory(models.TextChoices):
+    ISCILIK = "iscilik", "İşçilik"
+    MALZEME = "malzeme", "Malzeme"
+    EKIPMAN = "ekipman", "Ekipman"
+    TASERON = "taseron", "Taşeronluk"
+    GENEL_GIDER = "genel_gider", "Genel Gider"
+    DIGER = "diger", "Diğer"
+
+
+class BudgetLine(models.Model):
+    budget = models.ForeignKey(Budget, on_delete=models.CASCADE, related_name="lines")
+    category = models.CharField(
+        max_length=20, choices=BudgetLineCategory.choices, default=BudgetLineCategory.DIGER
+    )
+    description = models.CharField(max_length=255)
+    planned_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    actual_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Bütçe Kalemi"
+        verbose_name_plural = "Bütçe Kalemleri"
+        ordering = ["category", "description"]
+
+    def __str__(self):
+        return f"{self.get_category_display()} — {self.description}"
+
+
 class Expense(models.Model):
     class ExpenseType(models.TextChoices):
         LABOR = "labor", "İşçilik"

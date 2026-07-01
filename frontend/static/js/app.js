@@ -286,9 +286,16 @@ const App = (() => {
     if (tab === "resources")   Resources.load();
     if (tab === "dashboard")   Dashboard.load();
     if (tab === "payroll")     Payroll.load();
-    if (tab === "contractor")  Contractor.load();
-    if (tab === "ai-insights") AiInsights.load();
-    if (tab === "users")    Users.render();
+    if (tab === "contractor")    Contractor.load();
+    if (tab === "ai-insights")   AiInsights.load();
+    if (tab === "quality")       Quality.load();
+    if (tab === "change-orders") ChangeOrders.load();
+    if (tab === "procurement")   Procurement.load();
+    if (tab === "correspondence") Correspondence.load();
+    if (tab === "meetings")      Meetings.load();
+    if (tab === "hse")           HSE.load();
+    if (tab === "stakeholders")  Stakeholders.load();
+    if (tab === "users")         Users.render();
   }
 
   function refreshStats() { Reports.renderStatBar(); }

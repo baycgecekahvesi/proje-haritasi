@@ -5,6 +5,34 @@ from typing import Optional
 from ninja import Schema
 
 
+class BudgetLineIn(Schema):
+    category: str = "diger"
+    description: str
+    planned_amount: Decimal = Decimal("0")
+    actual_amount: Decimal = Decimal("0")
+
+
+class BudgetLinePatch(Schema):
+    category: Optional[str] = None
+    description: Optional[str] = None
+    planned_amount: Optional[Decimal] = None
+    actual_amount: Optional[Decimal] = None
+
+
+class BudgetLineOut(Schema):
+    id: int
+    category: str
+    category_display: str
+    description: str
+    planned_amount: Decimal
+    actual_amount: Decimal
+    created_at: datetime
+
+    @staticmethod
+    def resolve_category_display(obj) -> str:
+        return obj.get_category_display()
+
+
 class ExpenseIn(Schema):
     description: str
     amount: Decimal
@@ -45,3 +73,4 @@ class BudgetOut(Schema):
     usage_percent: float
     is_over_budget: bool
     expenses: list[ExpenseOut]
+    lines: list[BudgetLineOut]

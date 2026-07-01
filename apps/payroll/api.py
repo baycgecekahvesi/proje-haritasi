@@ -9,8 +9,13 @@ from apps.accounts.decorators import require_role
 from apps.accounts.models import User
 from apps.projects.models import Project
 
-from .models import ProgressPayment, PaymentStatus, Timesheet, TimesheetStatus
+from .models import FiyatFarki, MetrajSatiri, ProgressPayment, PaymentStatus, Timesheet, TimesheetStatus
 from .schemas import (
+    FiyatFarkiIn,
+    FiyatFarkiOut,
+    MetrajSatiriIn,
+    MetrajSatiriOut,
+    MetrajSatiriPatch,
     ProgressPaymentIn,
     ProgressPaymentOut,
     ProgressPaymentPatch,
@@ -155,3 +160,66 @@ def approve_payment(request, pp_id: int, approved_amount: Optional[str] = None):
 def delete_payment(request, pp_id: int):
     get_object_or_404(ProgressPayment, id=pp_id).delete()
     return {"detail": "Hakediş silindi"}
+
+
+# ── Metraj ────────────────────────────────────────────────────────────────────
+
+@router.get("/payments/{pp_id}/metraj", response=list[MetrajSatiriOut])
+def list_metraj(request, pp_id: int):
+    get_object_or_404(ProgressPayment, id=pp_id)
+    return list(MetrajSatiri.objects.filter(progress_payment_id=pp_id))
+
+
+@router.post("/payments/{pp_id}/metraj", response={200: MetrajSatiriOut})
+@require_role("admin", "editor")
+def create_metraj(request, pp_id: int, payload: MetrajSatiriIn):
+    pp = get_object_or_404(ProgressPayment, id=pp_id)
+    satir = MetrajSatiri.objects.create(
+        progress_payment=pp,
+        poz_no=payload.poz_no,
+        tanim=payload.tanim,
+        birim=payload.birim,
+        sozlesme_miktari=payload.sozlesme_miktari,
+        gerceklesen_miktar=payload.gerceklesen_miktar,
+        birim_fiyat=payload.birim_fiyat,
+    )
+    return MetrajSatiri.objects.get(id=satir.id)
+
+
+@router.patch("/payments/{pp_id}/metraj/{satir_id}", response=MetrajSatiriOut)
+@require_role("admin", "editor")
+def update_metraj(request, pp_id: int, satir_id: int, payload: MetrajSatiriPatch):
+    satir = get_object_or_404(MetrajSatiri, id=satir_id, progress_payment_id=pp_id)
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(satir, field, value)
+    satir.save()
+    return MetrajSatiri.objects.get(id=satir.id)
+
+
+@router.delete("/payments/{pp_id}/metraj/{satir_id}", response={200: dict})
+@require_role("admin", "editor")
+def delete_metraj(request, pp_id: int, satir_id: int):
+    get_object_or_404(MetrajSatiri, id=satir_id, progress_payment_id=pp_id).delete()
+    return {"detail": "Metraj satırı silindi"}
+
+
+# ── Fiyat Farkı ───────────────────────────────────────────────────────────────
+
+@router.get("/payments/{pp_id}/fiyat-farki", response=list[FiyatFarkiOut])
+def list_fiyat_farki(request, pp_id: int):
+    get_object_or_404(ProgressPayment, id=pp_id)
+    return list(FiyatFarki.objects.filter(progress_payment_id=pp_id))
+
+
+@router.post("/payments/{pp_id}/fiyat-farki", response={200: FiyatFarkiOut})
+@require_role("admin", "editor")
+def create_fiyat_farki(request, pp_id: int, payload: FiyatFarkiIn):
+    pp = get_object_or_404(ProgressPayment, id=pp_id)
+    ff = FiyatFarki.objects.create(
+        progress_payment=pp,
+        endeks_turu=payload.endeks_turu,
+        baslangic_endeksi=payload.baslangic_endeksi,
+        bitis_endeksi=payload.bitis_endeksi,
+        fark_tutari=payload.fark_tutari,
+    )
+    return FiyatFarki.objects.get(id=ff.id)

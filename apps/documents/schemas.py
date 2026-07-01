@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
 from ninja import Schema
@@ -129,3 +129,59 @@ class SitePhotoOut(Schema):
     @staticmethod
     def resolve_photo_url(obj) -> str:
         return obj.photo.url if obj.photo else ""
+
+
+# ── LegalPermit ───────────────────────────────────────────────────────────────
+
+class LegalPermitIn(Schema):
+    project_id: int
+    permit_type: str
+    permit_no: str
+    issued_by: str
+    issue_date: date
+    expiry_date: Optional[date] = None
+    status: str = "active"
+    notes: str = ""
+
+
+class LegalPermitPatch(Schema):
+    permit_type: Optional[str] = None
+    permit_no: Optional[str] = None
+    issued_by: Optional[str] = None
+    issue_date: Optional[date] = None
+    expiry_date: Optional[date] = None
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class LegalPermitOut(Schema):
+    id: int
+    project_id: int
+    project_name: str
+    permit_type: str
+    permit_type_display: str
+    permit_no: str
+    issued_by: str
+    issue_date: date
+    expiry_date: Optional[date] = None
+    status: str
+    status_display: str
+    file_url: Optional[str] = None
+    notes: str
+    created_at: datetime
+
+    @staticmethod
+    def resolve_project_name(obj) -> str:
+        return obj.project.name
+
+    @staticmethod
+    def resolve_permit_type_display(obj) -> str:
+        return obj.get_permit_type_display()
+
+    @staticmethod
+    def resolve_status_display(obj) -> str:
+        return obj.get_status_display()
+
+    @staticmethod
+    def resolve_file_url(obj) -> Optional[str]:
+        return obj.file.url if obj.file else None

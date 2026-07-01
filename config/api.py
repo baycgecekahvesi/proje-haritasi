@@ -24,6 +24,13 @@ from apps.payroll.api import router as payroll_router
 from apps.accounts.contractor_api import router as contractor_router
 from apps.ai_insights.api import router as ai_router
 from apps.calculations.api import router as calc_router
+from apps.quality.api import router as quality_router
+from apps.change_orders.api import router as change_orders_router
+from apps.procurement.api import router as procurement_router
+from apps.correspondence.api import router as correspondence_router
+from apps.meetings.api import router as meetings_router
+from apps.hse.api import router as hse_router
+from apps.stakeholders.api import router as stakeholders_router
 
 api = NinjaAPI(
     title="ProjeHaritasi API",
@@ -51,6 +58,13 @@ api.add_router("/payroll", payroll_router, tags=["Hakediş & Puantaj"])
 api.add_router("/contractor", contractor_router, tags=["Müteahhit Portalı"])
 api.add_router("/ai", ai_router, tags=["AI Insights"])
 api.add_router("/calculations", calc_router, tags=["Mühendislik Hesaplamaları"])
+api.add_router("/quality", quality_router, tags=["Kalite & ITP"])
+api.add_router("/change-orders", change_orders_router, tags=["Değişiklik Emirleri"])
+api.add_router("/procurement", procurement_router, tags=["Tedarik"])
+api.add_router("/correspondence", correspondence_router, tags=["Yazışma Yönetimi"])
+api.add_router("/meetings", meetings_router, tags=["Toplantı & Aksiyonlar"])
+api.add_router("/hse", hse_router, tags=["SGK & İSG"])
+api.add_router("/stakeholders", stakeholders_router, tags=["Paydaş Yönetimi"])
 
 
 @api.exception_handler(AuthenticationError)

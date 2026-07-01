@@ -5,6 +5,65 @@ from typing import Optional
 from ninja import Schema
 
 
+# ── MetrajSatiri ──────────────────────────────────────────────────────────────
+
+class MetrajSatiriIn(Schema):
+    poz_no: str
+    tanim: str
+    birim: str
+    sozlesme_miktari: Decimal = Decimal("0")
+    gerceklesen_miktar: Decimal = Decimal("0")
+    birim_fiyat: Decimal = Decimal("0")
+
+
+class MetrajSatiriPatch(Schema):
+    poz_no: Optional[str] = None
+    tanim: Optional[str] = None
+    birim: Optional[str] = None
+    sozlesme_miktari: Optional[Decimal] = None
+    gerceklesen_miktar: Optional[Decimal] = None
+    birim_fiyat: Optional[Decimal] = None
+
+
+class MetrajSatiriOut(Schema):
+    id: int
+    progress_payment_id: int
+    poz_no: str
+    tanim: str
+    birim: str
+    sozlesme_miktari: Decimal
+    gerceklesen_miktar: Decimal
+    birim_fiyat: Decimal
+    tutar: Decimal
+
+    @staticmethod
+    def resolve_tutar(obj) -> Decimal:
+        return obj.tutar
+
+
+# ── FiyatFarki ────────────────────────────────────────────────────────────────
+
+class FiyatFarkiIn(Schema):
+    endeks_turu: str
+    baslangic_endeksi: Decimal = Decimal("0")
+    bitis_endeksi: Decimal = Decimal("0")
+    fark_tutari: Decimal = Decimal("0")
+
+
+class FiyatFarkiOut(Schema):
+    id: int
+    progress_payment_id: int
+    endeks_turu: str
+    baslangic_endeksi: Decimal
+    bitis_endeksi: Decimal
+    fark_tutari: Decimal
+    katsayi: float
+
+    @staticmethod
+    def resolve_katsayi(obj) -> float:
+        return obj.katsayi
+
+
 class TimesheetIn(Schema):
     project_id:       int
     resource_id:      Optional[int] = None

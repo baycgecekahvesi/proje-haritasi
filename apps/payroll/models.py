@@ -84,3 +84,50 @@ class ProgressPayment(models.Model):
 
     def __str__(self):
         return f"{self.project.name} — {self.period_start} / {self.period_end}"
+
+
+class MetrajSatiri(models.Model):
+    progress_payment = models.ForeignKey(
+        ProgressPayment, on_delete=models.CASCADE, related_name="metraj_satirlari"
+    )
+    poz_no = models.CharField(max_length=50)
+    tanim = models.CharField(max_length=255)
+    birim = models.CharField(max_length=20)
+    sozlesme_miktari = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    gerceklesen_miktar = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    birim_fiyat = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    @property
+    def tutar(self):
+        return self.gerceklesen_miktar * self.birim_fiyat
+
+    class Meta:
+        verbose_name = "Metraj Satırı"
+        verbose_name_plural = "Metraj Satırları"
+        ordering = ["poz_no"]
+
+    def __str__(self):
+        return f"{self.poz_no} — {self.tanim}"
+
+
+class FiyatFarki(models.Model):
+    progress_payment = models.ForeignKey(
+        ProgressPayment, on_delete=models.CASCADE, related_name="fiyat_farklari"
+    )
+    endeks_turu = models.CharField(max_length=100)
+    baslangic_endeksi = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    bitis_endeksi = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    fark_tutari = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+
+    @property
+    def katsayi(self):
+        if self.baslangic_endeksi == 0:
+            return 0
+        return round(float(self.bitis_endeksi) / float(self.baslangic_endeksi), 4)
+
+    class Meta:
+        verbose_name = "Fiyat Farkı"
+        verbose_name_plural = "Fiyat Farkları"
+
+    def __str__(self):
+        return f"{self.endeks_turu} — {self.fark_tutari}"

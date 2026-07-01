@@ -104,6 +104,10 @@ class Task(models.Model):
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_name="tasks"
     )
+    parent = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.CASCADE, related_name="children"
+    )
+    wbs_code = models.CharField(max_length=20, blank=True)  # örn: "1.2.3"
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     assignee = models.ForeignKey(
