@@ -11,8 +11,8 @@ from apps.accounts.decorators import require_role
 from apps.accounts.models import User
 from apps.projects.models import Project
 
-from .models import Document, LegalPermit, SitePhoto
-from .schemas import DocumentOut, LegalPermitIn, LegalPermitOut, LegalPermitPatch, SitePhotoOut
+from .models import Document, SitePhoto
+from .schemas import DocumentOut, SitePhotoOut
 
 router = Router()
 
@@ -136,50 +136,3 @@ def delete_site_photo(request, project_id: int, photo_id: int):
     photo.delete()
     return {"detail": "Fotoğraf silindi"}
 
-
-# ── LegalPermit ───────────────────────────────────────────────────────────────
-
-@router.get("/permits", response=list[LegalPermitOut])
-def list_permits(request, project_id: Optional[int] = None):
-    qs = LegalPermit.objects.select_related("project")
-    if project_id:
-        qs = qs.filter(project_id=project_id)
-    return list(qs)
-
-
-@router.post("/permits", response={200: LegalPermitOut})
-@require_role("admin", "editor")
-def create_permit(request, payload: LegalPermitIn):
-    from apps.projects.models import Project as _Project
-    project = get_object_or_404(_Project, id=payload.project_id)
-    permit = LegalPermit.objects.create(
-        project=project,
-        permit_type=payload.permit_type,
-        permit_no=payload.permit_no,
-        issued_by=payload.issued_by,
-        issue_date=payload.issue_date,
-        expiry_date=payload.expiry_date,
-        status=payload.status,
-        notes=payload.notes,
-    )
-    return LegalPermit.objects.select_related("project").get(id=permit.id)
-
-
-@router.patch("/permits/{permit_id}", response=LegalPermitOut)
-@require_role("admin", "editor")
-def update_permit(request, permit_id: int, payload: LegalPermitPatch):
-    permit = get_object_or_404(LegalPermit, id=permit_id)
-    for field, value in payload.model_dump(exclude_unset=True).items():
-        setattr(permit, field, value)
-    permit.save()
-    return LegalPermit.objects.select_related("project").get(id=permit.id)
-
-
-@router.delete("/permits/{permit_id}", response={200: dict})
-@require_role("admin")
-def delete_permit(request, permit_id: int):
-    permit = get_object_or_404(LegalPermit, id=permit_id)
-    if permit.file:
-        permit.file.delete(save=False)
-    permit.delete()
-    return {"detail": "İzin/Ruhsat silindi"}

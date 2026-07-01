@@ -323,12 +323,12 @@ const Tasks = (() => {
 
 // ===================== İZİNLER =====================
 const Permits = (() => {
-  const PERMIT_STATUS_COLOR = { valid: "#27ae60", expired: "#e74c3c", pending: "#f39c12", cancelled: "#95a5a6" };
-  const PERMIT_STATUS_LABEL = { valid: "Geçerli", expired: "Süresi Dolmuş", pending: "Bekliyor", cancelled: "İptal" };
+  const STATUS_COLOR = { active: "#27ae60", expired: "#e74c3c", pending_renewal: "#f39c12" };
+  const STATUS_LABEL = { active: "Aktif", expired: "Süresi Dolmuş", pending_renewal: "Yenileme Bekliyor" };
 
   async function render(projectId, box) {
     let permits = [];
-    try { permits = await API.get(`/documents/permits/?project_id=${projectId}`); } catch (e) {
+    try { permits = await API.get(`/permits/?project_id=${projectId}`); } catch (e) {
       box.innerHTML = `<p class="muted">${UI.esc(e.message)}</p>`; return;
     }
     const editor = Auth.isEditor();
@@ -343,20 +343,18 @@ const Permits = (() => {
           const isExpiringSoon = expiry && !isExpired && expiry < thirtyDays;
           const rowStyle = isExpired
             ? "background:#e74c3c11;border-left:3px solid #e74c3c;"
-            : isExpiringSoon
-            ? "background:#f39c1211;border-left:3px solid #f39c12;"
-            : "";
+            : isExpiringSoon ? "background:#f39c1211;border-left:3px solid #f39c12;" : "";
           return `<div class="row-item" style="${rowStyle}">
             <div>
-              <strong>${UI.esc(pm.permit_type||pm.type||"İzin")}</strong>
-              <span class="pill" style="margin-left:4px">${UI.esc(pm.permit_number||"—")}</span>
-              ${pm.issuing_authority ? `<span class="muted" style="font-size:12px"> · ${UI.esc(pm.issuing_authority)}</span>` : ""}
+              <strong>${UI.esc(pm.permit_type_display || pm.permit_type || "İzin")}</strong>
+              <span class="pill" style="margin-left:4px">${UI.esc(pm.permit_no || "—")}</span>
+              ${pm.issued_by ? `<span class="muted" style="font-size:12px"> · ${UI.esc(pm.issued_by)}</span>` : ""}
               <div class="muted" style="font-size:12px;margin-top:2px">
-                ${pm.start_date ? `Başlangıç: ${UI.fmtDate(pm.start_date)} · ` : ""}
-                ${pm.expiry_date ? `Bitiş: ${UI.fmtDate(pm.expiry_date)}${isExpired?" (Süresi Dolmuş)":isExpiringSoon?" (30 gün içinde doluyor)":""}` : ""}
+                ${pm.issue_date ? `Düzenlenme: ${UI.fmtDate(pm.issue_date)} · ` : ""}
+                ${pm.expiry_date ? `Bitiş: ${UI.fmtDate(pm.expiry_date)}${isExpired ? " (Süresi Dolmuş)" : isExpiringSoon ? " (30 gün içinde doluyor)" : ""}` : "Son tarih yok"}
               </div>
             </div>
-            <span class="badge" style="background:${PERMIT_STATUS_COLOR[pm.status]||'#95a5a6'}">${PERMIT_STATUS_LABEL[pm.status]||pm.status}</span>
+            <span class="badge" style="background:${STATUS_COLOR[pm.status] || '#95a5a6'}">${STATUS_LABEL[pm.status] || pm.status}</span>
           </div>`;
         }).join("")}
       </div>`}
@@ -372,19 +370,26 @@ const Permits = (() => {
     UI.openModal(`
       <h3>Yeni İzin / Ruhsat</h3>
       <form id="permit-form">
-        <div class="form-row"><label>İzin Türü</label><input name="permit_type" placeholder="İnşaat Ruhsatı, Çevre İzni…" required /></div>
-        <div class="form-row"><label>İzin No</label><input name="permit_number" /></div>
-        <div class="form-row"><label>Veren Kurum</label><input name="issuing_authority" /></div>
+        <div class="form-row"><label>İzin Türü</label>
+          <select name="permit_type" required>
+            <option value="yapi_ruhsati">Yapı Ruhsatı</option>
+            <option value="cevre_izni">Çevre İzni</option>
+            <option value="isg_belgesi">İSG Belgesi</option>
+            <option value="belediye_onayi">Belediye Onayı</option>
+            <option value="diger">Diğer</option>
+          </select>
+        </div>
+        <div class="form-row"><label>İzin No</label><input name="permit_no" required /></div>
+        <div class="form-row"><label>Veren Kurum</label><input name="issued_by" required /></div>
         <div class="form-grid">
-          <div class="form-row"><label>Başlangıç Tarihi</label><input type="date" name="start_date" /></div>
+          <div class="form-row"><label>Düzenlenme Tarihi</label><input type="date" name="issue_date" required /></div>
           <div class="form-row"><label>Bitiş Tarihi</label><input type="date" name="expiry_date" /></div>
         </div>
         <div class="form-row"><label>Durum</label>
           <select name="status">
-            <option value="valid">Geçerli</option>
-            <option value="pending">Bekliyor</option>
+            <option value="active">Aktif</option>
+            <option value="pending_renewal">Yenileme Bekliyor</option>
             <option value="expired">Süresi Dolmuş</option>
-            <option value="cancelled">İptal</option>
           </select>
         </div>
         <div class="form-error" id="permit-err"></div>
@@ -399,12 +404,12 @@ const Permits = (() => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        await API.post("/documents/permits/", {
+        await API.post("/permits/", {
           project_id: +projectId,
           permit_type: fd.get("permit_type"),
-          permit_number: fd.get("permit_number") || "",
-          issuing_authority: fd.get("issuing_authority") || "",
-          start_date: fd.get("start_date") || null,
+          permit_no: fd.get("permit_no"),
+          issued_by: fd.get("issued_by"),
+          issue_date: fd.get("issue_date"),
           expiry_date: fd.get("expiry_date") || null,
           status: fd.get("status"),
         });

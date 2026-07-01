@@ -31,6 +31,7 @@ from apps.correspondence.api import router as correspondence_router
 from apps.meetings.api import router as meetings_router
 from apps.hse.api import router as hse_router
 from apps.stakeholders.api import router as stakeholders_router
+from apps.documents.permits_api import permits_router
 
 api = NinjaAPI(
     title="ProjeHaritasi API",
@@ -65,6 +66,7 @@ api.add_router("/correspondence", correspondence_router, tags=["Yazışma Yönet
 api.add_router("/meetings", meetings_router, tags=["Toplantı & Aksiyonlar"])
 api.add_router("/hse", hse_router, tags=["SGK & İSG"])
 api.add_router("/stakeholders", stakeholders_router, tags=["Paydaş Yönetimi"])
+api.add_router("/permits", permits_router, tags=["Ruhsat & Izin"])
 
 
 @api.exception_handler(AuthenticationError)
