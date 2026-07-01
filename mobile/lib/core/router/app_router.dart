@@ -8,8 +8,7 @@ import 'package:proje_haritasi_mobile/features/profile/screens/profile_screen.da
 import 'package:proje_haritasi_mobile/features/projects/screens/project_detail_screen.dart';
 import 'package:proje_haritasi_mobile/features/projects/screens/project_form_screen.dart';
 import 'package:proje_haritasi_mobile/features/projects/screens/projects_list_screen.dart';
-import 'package:proje_haritasi_mobile/features/risks/screens/risk_form_screen.dart';
-import 'package:proje_haritasi_mobile/features/risks/screens/risks_list_screen.dart';
+import 'package:proje_haritasi_mobile/features/notifications/screens/notifications_screen.dart';
 import 'package:proje_haritasi_mobile/features/tasks/screens/tasks_screen.dart';
 
 class RouterNotifier extends ChangeNotifier {
@@ -67,8 +66,8 @@ final appRouter = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/risks',
-              builder: (context, state) => const RisksListScreen(),
+              path: '/notifications',
+              builder: (context, state) => const NotificationsScreen(),
             ),
           ],
         ),
@@ -95,13 +94,6 @@ final appRouter = GoRouter(
       path: '/projects/:id/edit',
       builder: (context, state) =>
           ProjectFormScreen(projectId: state.pathParameters['id']),
-    ),
-    GoRoute(
-      path: '/risks/new',
-      builder: (context, state) => RiskFormSheet(
-        projects: const [],
-        onSaved: () {},
-      ),
     ),
   ],
 );

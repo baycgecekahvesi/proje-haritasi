@@ -82,9 +82,9 @@ class _HomeShellState extends State<HomeShell> {
             label: 'Görevler',
           ),
           NavigationDestination(
-            icon: Icon(Icons.warning_amber_outlined),
-            selectedIcon: Icon(Icons.warning_amber),
-            label: 'Riskler',
+            icon: Icon(Icons.notifications_outlined),
+            selectedIcon: Icon(Icons.notifications),
+            label: 'Bildirimler',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
